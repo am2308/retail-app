@@ -1,0 +1,67 @@
+name: "Terraform CI/CD"
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  terraform:
+    name: "Terraform Plan & Apply"
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+
+    env:
+      AWS_REGION: "ap-south-1"
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.3.0
+
+      - name: Configure AWS Credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          audience: sts.amazonaws.com
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Terraform Init
+        working-directory: terraform/ecs/default
+        run: terraform init -backend-config=vars/test/test.backend.tfvars
+
+      - name: Terraform Format
+        working-directory: terraform/ecs/default
+        run: terraform fmt --recursive
+
+      - name: Terraform Validate
+        working-directory: terraform/ecs/default
+        run: terraform validate
+
+      #- name: Terraform Security Scan
+      #  uses: aquasecurity/tfsec-action@v1.0.0
+      #  with:
+      #    soft_fail: true  # This option prevents tfsec from failing the pipeline
+      #    format: "json"
+      #   output_file: "tfsec-results.json"
+
+      - name: Terraform Plan
+        working-directory: terraform/ecs/default
+        run: terraform plan -var-file=vars/test/test.tfvars -out=tfplan
+
+      #- name: Manual Approval
+      #  uses: hmarr/auto-approve-action@v2
+      #  if: github.event_name == 'pull_request'
+
+      #- name: Terraform Apply
+      #  working-directory: terraform/ecs
+      #  run: terraform apply -auto-approve tfplan 
