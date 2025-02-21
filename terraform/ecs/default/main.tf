@@ -20,7 +20,7 @@ module "dependencies" {
 
   vpc_id             = module.vpc.inner.vpc_id
   subnet_ids         = module.vpc.inner.private_subnets
-  availability_zones = module.vpc.inner.azs
+  #availability_zones = module.vpc.inner.azs
 
   catalog_security_group_id  = module.retail_app_ecs.catalog_security_group_id
   orders_security_group_id   = module.retail_app_ecs.orders_security_group_id
