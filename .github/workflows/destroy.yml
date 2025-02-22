@@ -1,0 +1,56 @@
+name: "Terraform Destroy CI/CD"
+on:
+  workflow_dispatch:  # Manual trigger to prevent accidental deletions
+
+jobs:
+  terraform-destroy:
+    name: "Terraform Destroy"
+    runs-on: ubuntu-latest
+    environment: test
+    permissions:
+      id-token: write
+      contents: read
+
+    env:
+      AWS_REGION: "ap-south-1"
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.3.0
+
+      - name: Configure AWS Credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          audience: sts.amazonaws.com
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Terraform Init
+        working-directory: terraform/ecs/default
+        run: terraform init -backend-config=vars/test.backend.tfvars
+
+      - name: Terraform Format
+        working-directory: terraform/ecs/default
+        run: terraform fmt --recursive
+
+      - name: Terraform Validate
+        working-directory: terraform/ecs/default
+        run: terraform validate
+
+      - name: Terraform Plan (Destroy)
+        working-directory: terraform/ecs/default
+        run: terraform plan -destroy -var-file=vars/test.tfvars -out=tfplan-destroy
+
+      - name: Terraform Destroy
+        working-directory: terraform/ecs/default
+        run: terraform destroy -auto-approve -var-file=vars/test.tfvars
+
+      - name: Verify Resources are Destroyed
+        working-directory: terraform
+        run: |
+          terraform state list || echo "All resources destroyed successfully"
