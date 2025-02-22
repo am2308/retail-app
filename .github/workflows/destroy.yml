@@ -51,6 +51,6 @@ jobs:
         run: terraform destroy -auto-approve -var-file=vars/test.tfvars
 
       - name: Verify Resources are Destroyed
-        working-directory: terraform
+        working-directory: terraform/ecs/default
         run: |
           terraform state list || echo "All resources destroyed successfully"
