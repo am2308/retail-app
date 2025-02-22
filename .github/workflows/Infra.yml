@@ -62,6 +62,6 @@ jobs:
       #  uses: hmarr/auto-approve-action@v2
       #  if: github.event_name == 'pull_request'
 
-      #- name: Terraform Apply
-      #  working-directory: terraform/ecs
-      #  run: terraform apply -auto-approve tfplan 
+      - name: Terraform Apply
+        working-directory: terraform/ecs/default
+        run: terraform apply -auto-approve tfplan 
