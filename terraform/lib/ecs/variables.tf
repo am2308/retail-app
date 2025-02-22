@@ -119,3 +119,8 @@ variable "mq_password" {
   type        = string
   description = "Password for the shared MQ"
 }
+
+variable "certificate_arn" {
+  type        = string
+  description = "ARN of the certificate to use for HTTPS"
+}

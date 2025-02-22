@@ -6,8 +6,8 @@ module "alb_sg" {
   description = "UI ALB security group"
   vpc_id      = var.vpc_id
 
-  ingress_rules       = ["http-80-tcp"]
-  ingress_cidr_blocks = ["0.0.0.0/0"]
+  ingress_rules       = ["http-80-tcp", "https-443-tcp"]
+  ingress_cidr_blocks = ["93.174.85.223/32", "93.174.85.223/32"]
 
   egress_rules       = ["all-all"]
   egress_cidr_blocks = ["0.0.0.0/0"]
@@ -32,6 +32,14 @@ module "alb" {
       target_group_index = 0
     }
   ]
+  https_listeners = [
+    {
+      port            = 443
+      protocol        = "HTTPS"
+      certificate_arn = var.certificate_arn
+    }
+  ]
+
 
   target_groups = [
     {

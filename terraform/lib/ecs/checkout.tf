@@ -1,12 +1,12 @@
 module "checkout_service" {
   source = "./service"
 
-  environment_name                = var.environment_name
-  service_name                    = "checkout"
-  cluster_arn                     = aws_ecs_cluster.cluster.arn
-  vpc_id                          = var.vpc_id
+  environment_name = var.environment_name
+  service_name     = "checkout"
+  cluster_arn      = aws_ecs_cluster.cluster.arn
+  vpc_id           = var.vpc_id
   #vpc_cidr                        = var.vpc_cidr
-  subnet_ids                      = var.subnet_ids
+  subnet_ids = var.subnet_ids
   #public_subnet_ids               = var.public_subnet_ids
   tags                            = var.tags
   container_image                 = module.container_images.result.checkout.url

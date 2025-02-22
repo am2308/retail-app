@@ -18,8 +18,8 @@ module "dependencies" {
   environment_name = var.environment_name
   tags             = module.tags.result
 
-  vpc_id             = module.vpc.inner.vpc_id
-  subnet_ids         = module.vpc.inner.private_subnets
+  vpc_id     = module.vpc.inner.vpc_id
+  subnet_ids = module.vpc.inner.private_subnets
   #availability_zones = module.vpc.inner.azs
 
   catalog_security_group_id  = module.retail_app_ecs.catalog_security_group_id
@@ -56,7 +56,8 @@ module "retail_app_ecs" {
   orders_db_username = module.dependencies.orders_db_master_username
   orders_db_password = module.dependencies.orders_db_master_password
 
-  mq_endpoint = module.dependencies.mq_broker_endpoint
-  mq_username = module.dependencies.mq_user
-  mq_password = module.dependencies.mq_password
+  mq_endpoint     = module.dependencies.mq_broker_endpoint
+  mq_username     = module.dependencies.mq_user
+  mq_password     = module.dependencies.mq_password
+  certificate_arn = var.certificate_arn
 }

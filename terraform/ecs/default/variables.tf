@@ -9,3 +9,8 @@ variable "container_image_overrides" {
   default     = {}
   description = "Container image override object"
 }
+
+variable "certificate_arn" {
+  type        = string
+  description = "ARN of the certificate to use for HTTPS"
+}
