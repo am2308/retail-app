@@ -14,7 +14,7 @@ resource "aws_mq_broker" "mq" {
 
   engine_type         = "RabbitMQ"
   #engine_version      = "3.11.28"
-  engine_version      = "3.12.13"
+  engine_version      = "3.13"
   host_instance_type  = "mq.t3.micro"
   deployment_mode     = "SINGLE_INSTANCE"
   subnet_ids          = [var.subnet_ids[0]]
