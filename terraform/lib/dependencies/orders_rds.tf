@@ -4,7 +4,7 @@ module "orders_rds" {
 
   name           = "${var.environment_name}-orders"
   engine         = "aurora-postgresql"
-  engine_version = "15.4"
+  engine_version = "16.1"
   engine_mode    = "provisioned"
   instance_class = "db.t3.medium"
 
@@ -26,11 +26,11 @@ module "orders_rds" {
 
   create_db_parameter_group = true
   db_parameter_group_name   = "${var.environment_name}-orders"
-  db_parameter_group_family = "aurora-postgresql15"
+  db_parameter_group_family = "aurora-postgresql16"
 
   create_db_cluster_parameter_group = true
   db_cluster_parameter_group_name   = "${var.environment_name}-orders"
-  db_cluster_parameter_group_family = "aurora-postgresql15"
+  db_cluster_parameter_group_family = "aurora-postgresql16"
 
   tags = var.tags
 }
