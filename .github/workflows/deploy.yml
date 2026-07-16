@@ -80,15 +80,15 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Set up JDK 21
-        uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: 21
-          cache: maven
+      # - name: Set up JDK 21
+      #   uses: actions/setup-java@v4
+      #   with:
+      #     distribution: temurin
+      #     java-version: 21
+      #     cache: maven
 
-      - name: Resolve dependencies
-        run: mvn dependency:resolve
+      # - name: Resolve dependencies
+      #   run: mvn dependency:resolve
 
       - name: Trivy filesystem scan (dependency CVEs)
         continue-on-error: true
