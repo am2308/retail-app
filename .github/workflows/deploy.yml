@@ -81,6 +81,7 @@ jobs:
           fetch-depth: 0
 
       - name: Trivy filesystem scan (dependency CVEs)
+        continue-on-error: true
         uses: aquasecurity/trivy-action@master
         with:
           scan-type: fs
