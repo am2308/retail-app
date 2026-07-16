@@ -80,6 +80,16 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+          cache: maven
+
+      - name: Resolve dependencies
+        run: mvn dependency:resolve
+
       - name: Trivy filesystem scan (dependency CVEs)
         continue-on-error: true
         uses: aquasecurity/trivy-action@master
@@ -90,7 +100,9 @@ jobs:
           exit-code: 0
 
       - name: Gitleaks secret scan
-        uses: gitleaks/gitleaks-action@v2
+        uses: gitleaks/gitleaks-action@v3
+        env:
+          GITHUB_TOKEN: ${{ secrets.TOKEN }}
 
   # ── BUILD IMAGE → SCAN IMAGE → PUSH (only after the scan gate passes) ──
   build-and-push:
