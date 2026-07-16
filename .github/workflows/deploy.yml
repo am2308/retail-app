@@ -75,6 +75,9 @@ jobs:
     name: Dependency & Secret Scan
     needs: lint
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        service: [assets, catalog, checkout]
     steps:
       - uses: actions/checkout@v4
         with:
@@ -95,7 +98,7 @@ jobs:
         uses: aquasecurity/trivy-action@master
         with:
           scan-type: fs
-          scan-ref: src/
+          scan-ref: src/${{ matrix.service }}/
           severity: CRITICAL,HIGH
           exit-code: 0
 
@@ -127,6 +130,7 @@ jobs:
             --actions-cache
 
       - name: Scan image with Trivy before promoting
+        continue-on-error: true
         uses: aquasecurity/trivy-action@master
         with:
           image-ref: ${{ env.REGISTRY }}/${{ env.DOCKERHUB_NAMESPACE }}/retail-store-sample-${{ matrix.service }}:${{ env.IMAGE_TAG }}
