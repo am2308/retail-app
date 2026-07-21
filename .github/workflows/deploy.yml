@@ -154,44 +154,44 @@ jobs:
           docker push ${{ env.REGISTRY }}/${{ env.DOCKERHUB_NAMESPACE }}/retail-store-sample-${{ matrix.service }}:latest
 
   # ── DEPLOY: only on the self-hosted EC2 runner, only from main ──
-  # deploy:
-  #   name: Deploy via Docker Compose (self-hosted EC2)
-  #   needs: build-and-push
-  #   if: github.ref == 'refs/heads/main'
-  #   runs-on: [self-hosted, retail-app-deploy]
-  #   environment: production
-  #   steps:
-  #     - uses: actions/checkout@v4
+  deploy:
+    name: Deploy via Docker Compose (self-hosted EC2)
+    needs: build-and-push
+    if: github.ref == 'refs/heads/main'
+    runs-on: [self-hosted, retail-app-deploy]
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
 
-  #     - name: Write deploy .env
-  #       run: |
-  #         cat <<EOF > dist/docker-compose/.env
-  #         DOCKERHUB_NAMESPACE=${{ env.DOCKERHUB_NAMESPACE }}
-  #         IMAGE_TAG=${{ env.IMAGE_TAG }}
-  #         MYSQL_PASSWORD=${{ secrets.MYSQL_PASSWORD }}
-  #         EOF
+      - name: Write deploy .env
+        run: |
+          cat <<EOF > dist/docker-compose/.env
+          DOCKERHUB_NAMESPACE=${{ env.DOCKERHUB_NAMESPACE }}
+          IMAGE_TAG=${{ env.IMAGE_TAG }}
+          MYSQL_PASSWORD=${{ secrets.MYSQL_PASSWORD }}
+          EOF
 
-  #     - name: Pull latest images
-  #       working-directory: dist/docker-compose
-  #       run: docker compose -f docker-compose.ci.yml pull
+      - name: Pull latest images
+        working-directory: dist/docker-compose
+        run: docker compose -f docker-compose.ci.yml pull
 
-  #     - name: Deploy
-  #       working-directory: dist/docker-compose
-  #       run: docker compose -f docker-compose.ci.yml up -d --remove-orphans
+      - name: Deploy
+        working-directory: dist/docker-compose
+        run: docker compose -f docker-compose.ci.yml up -d --remove-orphans
 
-  #     - name: Smoke test
-  #       run: |
-  #         for i in $(seq 1 10); do
-  #           if curl -sf http://localhost:8888 > /dev/null; then
-  #             echo "UI is up and responding"
-  #             exit 0
-  #           fi
-  #           echo "Waiting for UI to become healthy... ($i/10)"
-  #           sleep 10
-  #         done
-  #         echo "UI failed health check after deploy — leaving old containers as-is for investigation"
-  #         exit 1
+      - name: Smoke test
+        run: |
+          for i in $(seq 1 10); do
+            if curl -sf http://localhost:8888 > /dev/null; then
+              echo "UI is up and responding"
+              exit 0
+            fi
+            echo "Waiting for UI to become healthy... ($i/10)"
+            sleep 10
+          done
+          echo "UI failed health check after deploy — leaving old containers as-is for investigation"
+          exit 1
 
-  #     - name: Clean up dangling images
-  #       if: always()
-  #       run: docker image prune -f
+      - name: Clean up dangling images
+        if: always()
+        run: docker image prune -f
