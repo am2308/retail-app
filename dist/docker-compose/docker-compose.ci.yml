@@ -59,13 +59,14 @@ services:
     restart: always
     environment:
       - JAVA_OPTS=-XX:MaxRAMPercentage=75.0 -Djava.security.egd=file:/dev/urandom
+      - JAVA_TOOL_OPTIONS=-Xmx320m -Xms320m
       - SERVER_TOMCAT_ACCESSLOG_ENABLED=true
       - SPRING_PROFILES_ACTIVE=dynamodb
       - CARTS_DYNAMODB_ENDPOINT=http://carts-db:8000
       - CARTS_DYNAMODB_CREATETABLE=true
       - AWS_ACCESS_KEY_ID=key
       - AWS_SECRET_ACCESS_KEY=dummy
-    mem_limit: 256m
+    mem_limit: 512m
     cap_drop:
       - ALL
 
