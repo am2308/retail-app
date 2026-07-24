@@ -1,0 +1,2795 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FintechApp Observability — CLI Hands-On Guide</title>
+<style>
+:root{--bg:#0d0f14;--bg2:#13161e;--bg3:#1a1e2a;--bg4:#222736;--card:#181c27;--card2:#1e2334;--border:#2a2f3f;--border2:#353b52;--text:#e8eaf2;--muted:#8892aa;--dim:#5a6278;--accent:#7c8dff;--accent2:#5b6ef5;--green:#3dd68c;--green2:#2ab87a;--orange:#f59e0b;--red:#f87171;--purple:#a78bfa;--teal:#2dd4bf;--cyan:#22d3ee;--pink:#f472b6;--yellow:#fbbf24;--radius:10px;--font:-apple-system,'Segoe UI',system-ui,sans-serif;--mono:'JetBrains Mono','Fira Code','Cascadia Code',monospace}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font);background:var(--bg);color:var(--text);line-height:1.7;font-size:15px}
+::-webkit-scrollbar{width:6px;height:6px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
+
+/* NAV */
+.nav{position:sticky;top:0;z-index:100;background:rgba(13,15,20,0.93);backdrop-filter:blur(16px);border-bottom:1px solid var(--border);padding:0 2rem;display:flex;align-items:center;gap:1.5rem;height:54px}
+.nav-brand{display:flex;align-items:center;gap:9px;font-weight:700;font-size:14px;color:var(--text);text-decoration:none;white-space:nowrap}
+.nav-brand .dot{width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green)}
+.nav-links{display:flex;align-items:center;overflow-x:auto;scrollbar-width:none;flex:1}
+.nav-links::-webkit-scrollbar{display:none}
+.nav-link{color:var(--muted);text-decoration:none;font-size:12.5px;padding:0 12px;height:54px;display:flex;align-items:center;border-bottom:2px solid transparent;white-space:nowrap;transition:color .2s,border-color .2s}
+.nav-link:hover{color:var(--text)}
+.nav-link.active{color:var(--accent);border-bottom-color:var(--accent)}
+.badge{background:var(--accent2);color:#fff;font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;letter-spacing:.3px}
+.badge.green{background:#15803d}.badge.orange{background:#b45309}
+
+/* HERO */
+.hero{background:linear-gradient(140deg,#0d0f14 0%,#0e1120 50%,#111827 100%);border-bottom:1px solid var(--border);padding:4.5rem 2rem 3.5rem;position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;top:-30%;left:-5%;width:500px;height:500px;background:radial-gradient(circle,rgba(124,141,255,.07) 0%,transparent 70%);pointer-events:none}
+.hero-inner{max-width:900px;margin:0 auto;position:relative}
+.hero-eyebrow{display:inline-flex;align-items:center;gap:8px;background:rgba(124,141,255,.1);border:1px solid rgba(124,141,255,.2);border-radius:20px;padding:4px 14px;font-size:11.5px;color:var(--accent);font-weight:600;letter-spacing:.5px;text-transform:uppercase;margin-bottom:1.4rem}
+.hero h1{font-size:clamp(1.8rem,3.5vw,2.8rem);font-weight:800;line-height:1.15;letter-spacing:-.03em;margin-bottom:1rem}
+.hero h1 .hl{color:var(--accent)}
+.hero h1 .hl2{color:var(--green)}
+.hero-sub{font-size:15px;color:var(--muted);max-width:640px;margin-bottom:1.8rem;line-height:1.8}
+.hero-tags{display:flex;flex-wrap:wrap;gap:7px}
+.tag{background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:3px 11px;font-size:12px;color:var(--muted);font-weight:500}
+.tag.hl{border-color:var(--accent);color:var(--accent);background:rgba(124,141,255,.07)}
+.tag.green{border-color:var(--green);color:var(--green);background:rgba(61,214,140,.07)}
+
+/* PHASE TABS (top-level navigation) */
+.phase-bar{background:var(--bg2);border-bottom:1px solid var(--border);padding:0 2rem;display:flex;gap:0;overflow-x:auto;scrollbar-width:none}
+.phase-bar::-webkit-scrollbar{display:none}
+.phase-btn{padding:.8rem 1.3rem;font-size:13px;font-weight:600;color:var(--muted);background:none;border:none;border-bottom:3px solid transparent;cursor:pointer;white-space:nowrap;transition:color .15s,border-color .15s;font-family:var(--font);display:flex;align-items:center;gap:7px}
+.phase-btn:hover{color:var(--text)}
+.phase-btn.active{color:var(--green);border-bottom-color:var(--green)}
+.phase-btn .pnum{width:20px;height:20px;border-radius:50%;background:var(--bg3);border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0}
+.phase-btn.active .pnum{background:var(--green);border-color:var(--green);color:#000}
+
+/* LAYOUT */
+.page{max-width:1020px;margin:0 auto;padding:2.5rem 2rem 5rem}
+.phase-content{display:none}.phase-content.active{display:block}
+.section{margin-bottom:3.5rem;scroll-margin-top:110px}
+.section-eyebrow{font-size:11px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--accent);margin-bottom:.4rem}
+.section h2{font-size:1.6rem;font-weight:700;letter-spacing:-.02em;margin-bottom:.5rem;line-height:1.2}
+.section-lead{color:var(--muted);font-size:14.5px;max-width:700px;margin-bottom:1.8rem;line-height:1.8}
+.divider{height:1px;background:var(--border);margin:2.5rem 0}
+
+/* CARDS */
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:1.4rem}
+.card+.card{margin-top:.9rem}
+.card-title{font-size:13.5px;font-weight:700;margin-bottom:.7rem;display:flex;align-items:center;gap:8px}
+.icon{width:26px;height:26px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0}
+.icon.orange{background:rgba(245,158,11,.12);color:var(--orange)}
+.icon.green{background:rgba(61,214,140,.12);color:var(--green)}
+.icon.purple{background:rgba(167,139,250,.12);color:var(--purple)}
+.icon.blue{background:rgba(124,141,255,.12);color:var(--accent)}
+.icon.red{background:rgba(248,113,113,.12);color:var(--red)}
+.icon.teal{background:rgba(45,212,191,.12);color:var(--teal)}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:.9rem}
+.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:.9rem}
+@media(max-width:700px){.grid-2,.grid-3{grid-template-columns:1fr}}
+
+/* CODE BLOCKS */
+.code-wrap{background:#090b10;border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin:.8rem 0}
+.code-header{background:var(--bg3);border-bottom:1px solid var(--border);padding:.45rem 1rem;display:flex;align-items:center;justify-content:space-between;font-size:12px;color:var(--muted);font-family:var(--mono)}
+.code-header .file{color:var(--text);font-weight:600}
+.code-header .lang-badge{background:var(--bg4);border:1px solid var(--border);border-radius:4px;padding:1px 7px;font-size:10px;color:var(--dim);text-transform:uppercase;letter-spacing:.5px}
+.code-header .copy-btn{background:var(--bg4);border:1px solid var(--border);border-radius:5px;padding:2px 9px;font-size:11px;color:var(--muted);cursor:pointer;font-family:var(--font);transition:color .15s,border-color .15s}
+.copy-btn:hover{color:var(--text);border-color:var(--border2)}
+.code-body{padding:1.1rem 1.4rem;overflow-x:auto;font-family:var(--mono);font-size:12.5px;line-height:1.75;color:#c9d1e8}
+.code-body pre{white-space:pre}
+/* syntax */
+.k{color:#7c8dff}.s{color:#3dd68c}.c{color:#3d4a5c;font-style:italic}.n{color:#fbbf24}.p{color:#f472b6}.cm{color:#a78bfa}.a{color:#f59e0b}.v{color:#2dd4bf}.cmd{color:#22d3ee}
+/* terminal prompt */
+.prompt{color:var(--green);user-select:none}.promptsym{color:var(--dim);user-select:none}
+
+/* STEP LIST */
+.step-list{display:flex;flex-direction:column;gap:1.3rem}
+.step{display:grid;grid-template-columns:42px 1fr;gap:.9rem;align-items:start}
+.step-num{width:42px;height:42px;border-radius:50%;border:2px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:var(--accent);flex-shrink:0}
+.step-num.done{border-color:var(--green);color:var(--green)}
+.step-content h4{font-size:14px;font-weight:700;margin-bottom:.25rem;color:var(--text)}
+.step-content p{font-size:13px;color:var(--muted);line-height:1.6}
+
+/* ALERTS */
+.alert{border-radius:var(--radius);padding:.9rem 1.1rem;font-size:13.5px;line-height:1.7;margin:.9rem 0;border-left:3px solid}
+.alert-info{background:rgba(124,141,255,.07);border-color:var(--accent);color:var(--text)}
+.alert-warn{background:rgba(245,158,11,.07);border-color:var(--orange);color:var(--text)}
+.alert-success{background:rgba(61,214,140,.07);border-color:var(--green);color:var(--text)}
+.alert-red{background:rgba(248,113,113,.07);border-color:var(--red);color:var(--text)}
+.alert strong{font-weight:700}
+
+/* CHECK ITEMS */
+.checklist{display:flex;flex-direction:column;gap:.45rem}
+.check-item{display:flex;align-items:flex-start;gap:.7rem;padding:.65rem .9rem;background:var(--card);border:1px solid var(--border);border-radius:8px;font-size:13px;transition:border-color .2s}
+.check-item:hover{border-color:var(--border2)}
+.check-item .ck{color:var(--green);font-size:14px;flex-shrink:0;margin-top:1px}
+.check-item .ck.warn{color:var(--orange)}.check-item .ck.blue{color:var(--accent)}
+.check-item strong{color:var(--text)}.check-item span{color:var(--muted)}
+
+/* TABS (inner) */
+.tabs{margin:.5rem 0 0}
+.tab-list{display:flex;gap:0;border-bottom:1px solid var(--border);overflow-x:auto;scrollbar-width:none}
+.tab-list::-webkit-scrollbar{display:none}
+.tab-btn{padding:.55rem 1.1rem;font-size:12px;font-weight:600;color:var(--muted);background:none;border:none;border-bottom:2px solid transparent;cursor:pointer;white-space:nowrap;transition:color .15s,border-color .15s;font-family:var(--font)}
+.tab-btn:hover{color:var(--text)}.tab-btn.active{color:var(--accent);border-bottom-color:var(--accent)}
+.tab-content{display:none}.tab-content.active{display:block}
+
+/* TIMELINE */
+.timeline{display:flex;flex-direction:column;gap:0}
+.tl-item{display:grid;grid-template-columns:28px 1fr;gap:.9rem;padding-bottom:1.5rem;position:relative}
+.tl-item:last-child{padding-bottom:0}
+.tl-item::before{content:'';position:absolute;left:13px;top:28px;bottom:0;width:2px;background:var(--border)}
+.tl-item:last-child::before{display:none}
+.tl-dot{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;z-index:1}
+.tl-dot.green{background:rgba(61,214,140,.15);border:2px solid var(--green);color:var(--green)}
+.tl-dot.blue{background:rgba(124,141,255,.15);border:2px solid var(--accent);color:var(--accent)}
+.tl-dot.orange{background:rgba(245,158,11,.15);border:2px solid var(--orange);color:var(--orange)}
+.tl-body h4{font-size:14px;font-weight:700;color:var(--text);margin-bottom:.2rem;margin-top:4px}
+.tl-body p{font-size:13px;color:var(--muted);line-height:1.6}
+
+/* TOOL CARDS */
+.tool-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:.9rem;margin-bottom:1.5rem}
+.tool-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:1.1rem;transition:border-color .2s,background .2s}
+.tool-card:hover{border-color:var(--border2);background:var(--card2)}
+.tool-name{font-size:14px;font-weight:700;color:var(--text);margin-bottom:.2rem}
+.tool-brew{font-family:var(--mono);font-size:11px;color:var(--teal);background:rgba(45,212,191,.08);border:1px solid rgba(45,212,191,.2);border-radius:5px;padding:2px 8px;display:inline-block;margin-bottom:.35rem}
+.tool-desc{font-size:12px;color:var(--muted);line-height:1.5}
+
+/* METRIC CARDS */
+.metric-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:.9rem;margin-bottom:1.4rem}
+.metric-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:1rem 1.1rem;transition:border-color .2s}
+.metric-card:hover{border-color:var(--border2)}
+.metric-label{font-size:10.5px;text-transform:uppercase;letter-spacing:.8px;color:var(--dim);margin-bottom:.35rem;font-weight:600}
+.metric-name{font-size:13px;font-weight:700;color:var(--text);margin-bottom:.25rem;font-family:var(--mono)}
+.metric-desc{font-size:12px;color:var(--muted);line-height:1.5}
+.mtype{display:inline-block;font-size:10px;font-weight:700;padding:2px 7px;border-radius:4px;margin-top:.35rem;text-transform:uppercase;letter-spacing:.3px}
+.mtype-c{background:rgba(124,141,255,.12);color:var(--accent)}
+.mtype-h{background:rgba(61,214,140,.12);color:var(--green)}
+.mtype-g{background:rgba(245,158,11,.12);color:var(--orange)}
+
+/* GRAFANA MOCKUP */
+.grafana-mockup{background:#111217;border:1px solid #252830;border-radius:10px;overflow:hidden;font-family:var(--mono);margin-bottom:1.5rem}
+.graf-topbar{background:#181b20;border-bottom:1px solid #252830;padding:.45rem 1rem;display:flex;align-items:center;gap:1rem;font-size:11.5px;color:#6b7280}
+.graf-title{color:#e8eaf2;font-weight:600;font-size:12.5px}
+.graf-panels{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:1px;background:#252830}
+@media(max-width:680px){.graf-panels{grid-template-columns:1fr 1fr}}
+.graf-panel{background:#14161c;padding:.65rem .9rem}
+.graf-panel-title{font-size:9.5px;color:#6b7280;text-transform:uppercase;letter-spacing:.5px;margin-bottom:.35rem}
+.graf-panel-val{font-size:1.5rem;font-weight:700;color:#e8eaf2;line-height:1;margin-bottom:.15rem}
+.graf-panel-trend{font-size:10.5px}
+.trend-ok{color:#3dd68c}.trend-warn{color:#fbbf24}.trend-bad{color:#f87171}
+.graf-chart-area{background:#14161c;padding:.65rem .9rem;grid-column:span 4;border-top:1px solid #252830}
+@media(max-width:680px){.graf-chart-area{grid-column:span 2}}
+
+/* FLOW PATH */
+.flow-path{display:flex;align-items:stretch;background:var(--card);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:1.5rem}
+.flow-step{flex:1;padding:.9rem .8rem;text-align:center;position:relative;font-size:11.5px}
+.flow-step+.flow-step{border-left:1px solid var(--border)}
+.flow-step::after{content:'→';position:absolute;right:-10px;top:50%;transform:translateY(-50%);color:var(--dim);z-index:1;font-size:13px}
+.flow-step:last-child::after{display:none}
+.flow-step .fi{font-size:1.2rem;margin-bottom:.2rem}
+.flow-step .fn{font-weight:700;color:var(--text);margin-bottom:.1rem;font-size:11.5px}
+.flow-step .fd{color:var(--dim);font-size:10.5px}
+
+/* COMPARE TABLE */
+.ctable{width:100%;border-collapse:collapse;font-size:13px;background:var(--card);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
+.ctable th{background:var(--bg3);padding:.65rem .9rem;font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);text-align:left;border-bottom:1px solid var(--border)}
+.ctable td{padding:.6rem .9rem;border-bottom:1px solid var(--border);color:var(--text);vertical-align:top}
+.ctable tr:last-child td{border-bottom:none}
+.ctable tr:hover td{background:var(--bg3)}
+
+/* PROGRESS BAR */
+.progress-bar{background:var(--border);height:4px;border-radius:2px;margin:.6rem 0 1rem;overflow:hidden}
+.progress-fill{height:100%;border-radius:2px;background:var(--green)}
+
+code{font-family:var(--mono);font-size:12px;background:var(--bg3);border:1px solid var(--border);border-radius:4px;padding:1px 6px;color:var(--teal)}
+
+.footer{border-top:1px solid var(--border);padding:1.8rem 2rem;text-align:center;color:var(--dim);font-size:12px}
+.footer a{color:var(--muted);text-decoration:none}.footer a:hover{color:var(--text)}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="nav">
+  <a href="#" class="nav-brand"><span class="dot"></span>FintechApp Observability</a>
+  <div class="nav-links">
+    <a href="#" class="nav-link active" onclick="showPhase('p0',this)">Overview</a>
+    <a href="#" class="nav-link" onclick="showPhase('p1',this)">Phase 1 — Local Dev</a>
+    <a href="#" class="nav-link" onclick="showPhase('p2',this)">Phase 2 — kind/K8s</a>
+    <a href="#" class="nav-link" onclick="showPhase('p3',this)">Phase 3 — EKS</a>
+    <a href="#" class="nav-link" onclick="showPhase('p4',this)">Dashboards</a>
+    <a href="#" class="nav-link" onclick="showPhase('p5',this)">Alerting</a>
+    <a href="#" class="nav-link" onclick="showPhase('p6',this)">Kiro AI Prep</a>
+    <span class="badge green">CLI First</span>
+  </div>
+</nav>
+
+<!-- HERO -->
+<header class="hero">
+  <div class="hero-inner">
+    <div class="hero-eyebrow">📊 Observability Session 1 — Command Line Edition</div>
+    <h1>Prometheus &amp; Grafana for <span class="hl">FintechApp</span><br>From <span class="hl2">Mac Terminal → EKS Production</span></h1>
+    <p class="hero-sub">No Terraform required. Every command runs from your Mac terminal. Practice locally with Docker Compose → scale up to kind/minikube → deploy to real EKS. Step-by-step, copy-paste ready.</p>
+    <div class="hero-tags">
+      <span class="tag hl">Mac Terminal · brew</span>
+      <span class="tag green">Docker Compose (local dev)</span>
+      <span class="tag">kind / minikube (local k8s)</span>
+      <span class="tag">kubectl · helm</span>
+      <span class="tag">AWS CLI → EKS</span>
+      <span class="tag">kube-prometheus-stack</span>
+      <span class="tag">AWS Managed Prometheus</span>
+    </div>
+  </div>
+</header>
+
+<!-- PHASE BAR -->
+<div class="phase-bar">
+  <button class="phase-btn active" onclick="showPhase('p0',this)"><span class="pnum">0</span>Overview</button>
+  <button class="phase-btn" onclick="showPhase('p1',this)"><span class="pnum">1</span>Local Docker</button>
+  <button class="phase-btn" onclick="showPhase('p2',this)"><span class="pnum">2</span>kind / K8s</button>
+  <button class="phase-btn" onclick="showPhase('p3',this)"><span class="pnum">3</span>EKS Production</button>
+  <button class="phase-btn" onclick="showPhase('p4',this)"><span class="pnum">4</span>Grafana Dashboards</button>
+  <button class="phase-btn" onclick="showPhase('p5',this)"><span class="pnum">5</span>Alerting</button>
+  <button class="phase-btn" onclick="showPhase('p6',this)"><span class="pnum">6</span>Kiro AI Feed</button>
+</div>
+
+<div class="page">
+
+<!-- ═══════════════ PHASE 0 — OVERVIEW ═══════════════ -->
+<div class="phase-content active" id="phase-p0">
+
+  <section class="section">
+    <div class="section-eyebrow">Learning Path</div>
+    <h2>How this session is structured</h2>
+    <p class="section-lead">We go from zero to production in three phases. Each phase builds on the last. You can stop at Phase 1 to understand concepts, or run the full path to a live EKS stack.</p>
+
+    <div class="flow-path">
+      <div class="flow-step">
+        <div class="fi">🐳</div>
+        <div class="fn">Phase 1</div>
+        <div class="fd">Docker Compose — your Mac, 5 min setup</div>
+      </div>
+      <div class="flow-step">
+        <div class="fi">☸️</div>
+        <div class="fn">Phase 2</div>
+        <div class="fd">kind cluster — real Kubernetes locally</div>
+      </div>
+      <div class="flow-step">
+        <div class="fi">☁️</div>
+        <div class="fn">Phase 3</div>
+        <div class="fd">EKS + AMP — production AWS</div>
+      </div>
+      <div class="flow-step">
+        <div class="fi">📊</div>
+        <div class="fn">Phase 4–5</div>
+        <div class="fd">Grafana dashboards + Alerting rules</div>
+      </div>
+      <div class="flow-step">
+        <div class="fi">🤖</div>
+        <div class="fn">Phase 6</div>
+        <div class="fd">Kiro AI data prep</div>
+      </div>
+    </div>
+
+    <div class="alert alert-info">
+      <strong>Your app is already 60% instrumented.</strong> Your <code>common/middleware.py</code> already uses <code>prometheus_client</code> and mounts <code>/metrics</code>. We're upgrading the middleware for production quality, then wiring up the full scrape-to-dashboard pipeline.
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <section class="section">
+    <div class="section-eyebrow">Why Prometheus + Grafana</div>
+    <h2>The observability case — explained plainly</h2>
+    <p class="section-lead">Observability = knowing <em>why</em> something broke, not just <em>that</em> it broke. The three pillars are Metrics, Traces, and Logs. This session covers Metrics.</p>
+
+    <div class="grid-3">
+      <div class="card">
+        <div class="card-title"><span class="icon blue">🔬</span>Why Prometheus</div>
+        <ul style="padding-left:1.1rem;font-size:13px;color:var(--muted);line-height:2">
+          <li><strong style="color:var(--text)">Pull model</strong> — Prometheus scrapes <code>/metrics</code>. Dead service = immediate alert.</li>
+          <li><strong style="color:var(--text)">Labels</strong> — <code>slot=blue</code>, <code>slot=green</code> baked in. Filter during cutover.</li>
+          <li><strong style="color:var(--text)">PromQL</strong> — exact p95/p99, not averages. Your SLAs need this.</li>
+          <li><strong style="color:var(--text)">Free</strong> — no per-host charges unlike Datadog.</li>
+          <li><strong style="color:var(--text)">K8s-native</strong> — ServiceMonitor CRDs auto-discover pods.</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="card-title"><span class="icon orange">📊</span>Why Grafana</div>
+        <ul style="padding-left:1.1rem;font-size:13px;color:var(--muted);line-height:2">
+          <li><strong style="color:var(--text)">50+ data sources</strong> — Prometheus today, Loki logs + Tempo traces next.</li>
+          <li><strong style="color:var(--text)">Zero lock-in</strong> — same dashboards work self-hosted or AWS Managed.</li>
+          <li><strong style="color:var(--text)">Alerting</strong> — unified alert evaluation in Grafana 10+.</li>
+          <li><strong style="color:var(--text)">100k dashboards</strong> — import community ones with one click.</li>
+          <li><strong style="color:var(--text)">LGTM stack</strong> — Grafana is the UI layer for the whole observability ecosystem.</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="card-title"><span class="icon green">☁️</span>AWS Managed vs Self-Hosted</div>
+        <ul style="padding-left:1.1rem;font-size:13px;color:var(--muted);line-height:2">
+          <li><strong style="color:var(--text)">Local/Dev</strong> — Docker Compose, no AWS needed.</li>
+          <li><strong style="color:var(--text)">Staging/Learning</strong> — kind cluster + self-hosted prometheus.</li>
+          <li><strong style="color:var(--text)">Production</strong> — AMP (150-day retention, HA) + AMG (SSO).</li>
+          <li><strong style="color:var(--text)">Cost at your scale</strong> — AMP ~$15/mo vs Datadog ~$400/mo.</li>
+          <li><strong style="color:var(--text)">Scrape locally always</strong> — in-cluster Prometheus scrapes, remote_write to AMP.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <section class="section">
+    <div class="section-eyebrow">Mac Prerequisites</div>
+    <h2>Install everything you need — one brew command</h2>
+    <p class="section-lead">All tools installable via Homebrew. This takes about 5 minutes on a fresh Mac.</p>
+
+    <div class="tool-grid">
+      <div class="tool-card">
+        <div class="tool-name">Docker Desktop</div>
+        <div class="tool-brew">brew install --cask docker</div>
+        <div class="tool-desc">Container runtime. Enable Kubernetes in preferences for Phase 2 alternative.</div>
+      </div>
+      <div class="tool-card">
+        <div class="tool-name">kubectl</div>
+        <div class="tool-brew">brew install kubectl</div>
+        <div class="tool-desc">Kubernetes CLI. You likely already have this from your EKS work.</div>
+      </div>
+      <div class="tool-card">
+        <div class="tool-name">helm</div>
+        <div class="tool-brew">brew install helm</div>
+        <div class="tool-desc">Already used for blue-green deploys. We'll add the monitoring stack.</div>
+      </div>
+      <div class="tool-card">
+        <div class="tool-name">kind</div>
+        <div class="tool-brew">brew install kind</div>
+        <div class="tool-desc">Kubernetes IN Docker. Creates a real multi-node K8s cluster locally.</div>
+      </div>
+      <div class="tool-card">
+        <div class="tool-name">AWS CLI v2</div>
+        <div class="tool-brew">brew install awscli</div>
+        <div class="tool-desc">Needed for Phase 3 EKS + AMP. Configure with your IAM credentials.</div>
+      </div>
+      <div class="tool-card">
+        <div class="tool-name">k9s</div>
+        <div class="tool-brew">brew install k9s</div>
+        <div class="tool-desc">Terminal UI for Kubernetes. Invaluable for watching pods + logs live.</div>
+      </div>
+      <div class="tool-card">
+        <div class="tool-name">jq</div>
+        <div class="tool-brew">brew install jq</div>
+        <div class="tool-desc">Parse JSON in terminal. Used in health-check scripts.</div>
+      </div>
+      <div class="tool-card">
+        <div class="tool-name">promtool</div>
+        <div class="tool-brew">brew install prometheus</div>
+        <div class="tool-desc">Includes promtool for linting alert rules before deploying.</div>
+      </div>
+    </div>
+
+    <div class="code-wrap">
+      <div class="code-header"><span class="file">Terminal — install everything at once</span><span class="lang-badge">bash</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+      <div class="code-body"><pre>
+<span class="c"># ── Install Homebrew if you don't have it ────────────────────────────────────</span>
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+
+<span class="c"># ── All tools in one shot ────────────────────────────────────────────────────</span>
+brew install kubectl helm kind awscli jq prometheus k9s
+brew install --cask docker
+
+<span class="c"># ── Verify ───────────────────────────────────────────────────────────────────</span>
+kubectl version --client --short
+helm version --short
+kind version
+docker --version
+aws --version
+promtool --version
+
+<span class="c"># ── Add Helm repos we'll use throughout ──────────────────────────────────────</span>
+helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+helm repo add grafana              https://grafana.github.io/helm-charts
+helm repo update
+
+<span class="c"># ── Confirm repos are added ──────────────────────────────────────────────────</span>
+helm repo list
+<span class="c"># Expected:
+# NAME                 URL
+# prometheus-community https://prometheus-community.github.io/helm-charts
+# grafana              https://grafana.github.io/helm-charts</span>
+</pre></div>
+    </div>
+  </section>
+
+</div><!-- /phase-p0 -->
+
+
+<!-- ═══════════════ PHASE 1 — LOCAL DOCKER ═══════════════ -->
+<div class="phase-content" id="phase-p1">
+
+  <section class="section">
+    <div class="section-eyebrow">Phase 1</div>
+    <h2>Local practice with Docker Compose</h2>
+    <p class="section-lead">Fastest way to understand the full pipeline. Everything runs on your Mac — your FintechApp services, Prometheus, and Grafana — connected via Docker Compose network. No Kubernetes, no AWS, no cost.</p>
+
+    <div class="progress-bar"><div class="progress-fill" style="width:33%"></div></div>
+
+    <div class="alert alert-success">
+      <strong>Goal of Phase 1:</strong> See your FintechApp's <code>/metrics</code> endpoint scraped by Prometheus and visualised in Grafana — all running locally. Takes about 10 minutes from scratch.
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="section-eyebrow">Step 1</div>
+    <h2>Upgrade MetricsMiddleware for production metrics</h2>
+    <p class="section-lead">First, upgrade your existing <code>common/middleware.py</code>. This adds p95-compatible histogram buckets, explicit error counters, and the <code>slot</code> label your dashboards need.</p>
+
+    <div class="code-wrap">
+      <div class="code-header"><span class="file">banking-services/common/middleware.py — full replacement</span><span class="lang-badge">python</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+      <div class="code-body"><pre>
+<span class="c"># Drop-in replacement for your existing middleware.py
+# Key upgrades:
+#  1. Explicit histogram buckets tuned for fintech SLOs
+#  2. Separate http_errors_total counter (4xx + 5xx split)
+#  3. In-flight gauge (saturation signal)
+#  4. slot + version labels from env vars (injected by Docker Compose / Helm)
+#  5. Path normalisation: /accounts/uuid → /accounts/{id} (prevents cardinality explosion)</span>
+
+<span class="k">from</span> fastapi <span class="k">import</span> Request
+<span class="k">from</span> starlette.middleware.base <span class="k">import</span> BaseHTTPMiddleware
+<span class="k">from</span> prometheus_client <span class="k">import</span> Counter, Histogram, Gauge, Info
+<span class="k">import</span> time, os, re
+
+<span class="c"># ── Latency buckets aligned to fintech SLOs ──────────────────────────────────
+# &lt;50ms = fast, &lt;200ms = good, &lt;500ms = acceptable, &gt;500ms = SLO risk
+# These are what histogram_quantile(0.95, ...) uses for p95 calculation</span>
+LATENCY_BUCKETS = (
+    <span class="n">0.010</span>, <span class="n">0.025</span>, <span class="n">0.050</span>, <span class="n">0.100</span>, <span class="n">0.200</span>,
+    <span class="n">0.500</span>, <span class="n">1.0</span>, <span class="n">2.5</span>, <span class="n">5.0</span>, <span class="n">10.0</span>
+)
+
+SKIP_PATHS = {<span class="s">"/metrics"</span>, <span class="s">"/health"</span>, <span class="s">"/healthz"</span>, <span class="s">"/ready"</span>, <span class="s">"/favicon.ico"</span>}
+UUID_PATTERN = re.compile(r<span class="s">'/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}'</span>)
+NUM_PATTERN   = re.compile(r<span class="s">'/\d+'</span>)
+
+
+<span class="k">class</span> <span class="n">MetricsMiddleware</span>(BaseHTTPMiddleware):
+    <span class="k">def</span> __init__(self, app, app_name: str):
+        <span class="k">super</span>().__init__(app)
+        self.app_name = app_name
+        slot    = os.getenv(<span class="s">"SLOT"</span>, <span class="s">"local"</span>)     <span class="c"># blue | green | local</span>
+        version = os.getenv(<span class="s">"APP_VERSION"</span>, <span class="s">"dev"</span>)
+
+        <span class="c"># ── Counters ─────────────────────────────────────────────────────────</span>
+        self.req_total = Counter(
+            <span class="s">'http_requests_total'</span>, <span class="s">'Total HTTP requests'</span>,
+            [<span class="s">'service'</span>, <span class="s">'method'</span>, <span class="s">'endpoint'</span>, <span class="s">'status'</span>, <span class="s">'status_class'</span>, <span class="s">'slot'</span>]
+        )
+        self.err_total = Counter(
+            <span class="s">'http_errors_total'</span>, <span class="s">'HTTP 4xx and 5xx errors'</span>,
+            [<span class="s">'service'</span>, <span class="s">'method'</span>, <span class="s">'endpoint'</span>, <span class="s">'status'</span>, <span class="s">'error_class'</span>, <span class="s">'slot'</span>]
+        )
+        <span class="c"># ── Latency histogram ─────────────────────────────────────────────────</span>
+        self.latency = Histogram(
+            <span class="s">'http_request_duration_seconds'</span>, <span class="s">'HTTP request duration'</span>,
+            [<span class="s">'service'</span>, <span class="s">'method'</span>, <span class="s">'endpoint'</span>, <span class="s">'slot'</span>],
+            buckets=LATENCY_BUCKETS
+        )
+        <span class="c"># ── Gauges ───────────────────────────────────────────────────────────</span>
+        self.in_flight = Gauge(
+            <span class="s">'http_requests_in_flight'</span>, <span class="s">'Current in-flight requests'</span>, [<span class="s">'service'</span>, <span class="s">'slot'</span>]
+        )
+        self.service_up = Gauge(<span class="s">'up'</span>, <span class="s">'Service up status'</span>, [<span class="s">'app'</span>, <span class="s">'slot'</span>])
+        <span class="c"># ── Business KPI counter ──────────────────────────────────────────────</span>
+        self.biz_ops = Counter(
+            <span class="s">'business_operations_total'</span>, <span class="s">'Business operation counts'</span>,
+            [<span class="s">'service'</span>, <span class="s">'operation'</span>, <span class="s">'status'</span>, <span class="s">'slot'</span>]
+        )
+        <span class="c"># ── Service info ──────────────────────────────────────────────────────</span>
+        self.svc_info = Info(<span class="s">'service_build'</span>, <span class="s">'Service metadata'</span>)
+
+        self.slot = slot
+        self.service_up.labels(app=app_name, slot=slot).set(<span class="n">1</span>)
+        self.svc_info.info({<span class="s">'service'</span>: app_name, <span class="s">'slot'</span>: slot, <span class="s">'version'</span>: version})
+
+    <span class="k">async def</span> dispatch(self, request: Request, call_next):
+        <span class="k">if</span> request.url.path <span class="k">in</span> SKIP_PATHS:
+            <span class="k">return await</span> call_next(request)
+
+        endpoint = self._norm(request.url.path)
+        self.in_flight.labels(service=self.app_name, slot=self.slot).inc()
+        start = time.perf_counter()
+
+        <span class="k">try</span>:
+            response = <span class="k">await</span> call_next(request)
+            dur = time.perf_counter() - start
+            status = response.status_code
+            cls = f<span class="s">"{status // 100}xx"</span>
+
+            self.req_total.labels(
+                service=self.app_name, method=request.method,
+                endpoint=endpoint, status=status, status_class=cls, slot=self.slot
+            ).inc()
+
+            <span class="k">if</span> status >= <span class="n">400</span>:
+                ec = <span class="s">"client_error"</span> <span class="k">if</span> status < <span class="n">500</span> <span class="k">else</span> <span class="s">"server_error"</span>
+                self.err_total.labels(
+                    service=self.app_name, method=request.method,
+                    endpoint=endpoint, status=status, error_class=ec, slot=self.slot
+                ).inc()
+
+            self.latency.labels(
+                service=self.app_name, method=request.method,
+                endpoint=endpoint, slot=self.slot
+            ).observe(dur)
+
+            self._biz(request.url.path, request.method, status)
+            <span class="k">return</span> response
+
+        <span class="k">except</span> Exception <span class="k">as</span> e:
+            self.service_up.labels(app=self.app_name, slot=self.slot).set(<span class="n">0</span>)
+            <span class="k">raise</span>
+        <span class="k">finally</span>:
+            self.in_flight.labels(service=self.app_name, slot=self.slot).dec()
+
+    <span class="k">def</span> _norm(self, path: str) -> str:
+        path = UUID_PATTERN.sub(<span class="s">'/{id}'</span>, path)
+        path = NUM_PATTERN.sub(<span class="s">'/{id}'</span>, path)
+        <span class="k">return</span> path
+
+    <span class="k">def</span> _biz(self, path: str, method: str, status: int):
+        ops = {
+            (<span class="s">"/accounts"</span>, <span class="s">"POST"</span>): <span class="s">"account_creation"</span>,
+            (<span class="s">"/token"</span>, <span class="s">"POST"</span>): <span class="s">"authentication"</span>,
+            (<span class="s">"/transactions"</span>, <span class="s">"POST"</span>): <span class="s">"transaction"</span>,
+        }
+        op = ops.get((path, method))
+        <span class="k">if</span> op:
+            self.biz_ops.labels(
+                service=self.app_name, operation=op,
+                status=<span class="s">"success"</span> <span class="k">if</span> status < <span class="n">400</span> <span class="k">else</span> <span class="s">"failure"</span>,
+                slot=self.slot
+            ).inc()
+</pre></div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="section-eyebrow">Step 2</div>
+    <h2>Docker Compose — full local observability stack</h2>
+    <p class="section-lead">This file runs your three FintechApp services, MySQL, Prometheus, and Grafana — all connected on one Docker network. Open Prometheus at <code>:9090</code>, Grafana at <code>:3000</code>.</p>
+
+    <div class="code-wrap">
+      <div class="code-header"><span class="file">docker-compose.observability.yml — save at FintechApp-main root</span><span class="lang-badge">yaml</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+      <div class="code-body"><pre>
+<span class="c"># docker-compose.observability.yml
+# Run: docker compose -f docker-compose.observability.yml up --build
+# Prometheus: http://localhost:9090
+# Grafana:    http://localhost:3000  (admin / admin123)</span>
+
+version: <span class="s">"3.9"</span>
+
+x-common-env: <span class="p">&amp;common-env</span>
+  MYSQL_HOST: mysql
+  MYSQL_DB: banking
+  MYSQL_ROOT_PASSWORD: bankingpassword123
+  APP_VERSION: <span class="s">"1.0.0"</span>
+
+networks:
+  observability:
+    driver: bridge
+
+volumes:
+  mysql_data:
+  prometheus_data:
+  grafana_data:
+
+services:
+
+  <span class="c"># ── MySQL ────────────────────────────────────────────────────────────────</span>
+  mysql:
+    image: mariadb:10.9
+    container_name: fintech-mysql
+    networks: [observability]
+    environment:
+      MYSQL_ROOT_PASSWORD: bankingpassword123
+      MYSQL_DATABASE: banking
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: [<span class="s">"CMD"</span>, <span class="s">"mysqladmin"</span>, <span class="s">"ping"</span>, <span class="s">"-h"</span>, <span class="s">"localhost"</span>]
+      interval: 10s
+      retries: 5
+
+  <span class="c"># ── Account Service ──────────────────────────────────────────────────────</span>
+  account-service:
+    build:
+      context: ./banking-services
+      dockerfile: account-service/dockerfile
+    container_name: account-service
+    networks: [observability]
+    ports: [<span class="s">"8081:8081"</span>]
+    environment:
+      &lt;&lt;: *common-env
+      SLOT: <span class="s">"blue"</span>
+    depends_on:
+      mysql: {condition: service_healthy}
+
+  <span class="c"># ── Auth Service ─────────────────────────────────────────────────────────</span>
+  auth-service:
+    build:
+      context: ./banking-services
+      dockerfile: auth-service/dockerfile
+    container_name: auth-service
+    networks: [observability]
+    ports: [<span class="s">"8082:8082"</span>]
+    environment:
+      &lt;&lt;: *common-env
+      SLOT: <span class="s">"blue"</span>
+
+  <span class="c"># ── Transaction Service ──────────────────────────────────────────────────</span>
+  transaction-service:
+    build:
+      context: ./banking-services
+      dockerfile: transaction-service/dockerfile
+    container_name: transaction-service
+    networks: [observability]
+    ports: [<span class="s">"8083:8083"</span>]
+    environment:
+      &lt;&lt;: *common-env
+      AUTH_HOST: auth-service
+      AUTH_PORT: <span class="s">"8082"</span>
+      SLOT: <span class="s">"blue"</span>
+    depends_on:
+      mysql: {condition: service_healthy}
+
+  <span class="c"># ── Prometheus ───────────────────────────────────────────────────────────</span>
+  prometheus:
+    image: prom/prometheus:v2.51.0
+    container_name: fintech-prometheus
+    networks: [observability]
+    ports: [<span class="s">"9090:9090"</span>]
+    volumes:
+      - ./observability/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./observability/prometheus/rules:/etc/prometheus/rules:ro
+      - prometheus_data:/prometheus
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+      - --storage.tsdb.retention.time=15d
+      - --web.enable-lifecycle          <span class="c"># allows hot-reload: curl -X POST :9090/-/reload</span>
+      - --web.enable-admin-api
+    restart: unless-stopped
+
+  <span class="c"># ── Grafana ──────────────────────────────────────────────────────────────</span>
+  grafana:
+    image: grafana/grafana:10.4.0
+    container_name: fintech-grafana
+    networks: [observability]
+    ports: [<span class="s">"3000:3000"</span>]
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin123
+      GF_USERS_ALLOW_SIGN_UP: <span class="s">"false"</span>
+      GF_FEATURE_TOGGLES_ENABLE: <span class="s">"alertingSimplifiedRouting"</span>
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./observability/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./observability/grafana/dashboards:/var/lib/grafana/dashboards:ro
+    depends_on: [prometheus]
+    restart: unless-stopped
+
+  <span class="c"># ── Alertmanager ─────────────────────────────────────────────────────────</span>
+  alertmanager:
+    image: prom/alertmanager:v0.27.0
+    container_name: fintech-alertmanager
+    networks: [observability]
+    ports: [<span class="s">"9093:9093"</span>]
+    volumes:
+      - ./observability/alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
+    command:
+      - --config.file=/etc/alertmanager/alertmanager.yml
+      - --storage.path=/alertmanager
+    restart: unless-stopped
+</pre></div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="section-eyebrow">Step 3</div>
+    <h2>Create the config files Prometheus needs</h2>
+    <p class="section-lead">Create the directory structure and config files that Docker Compose mounts into the containers.</p>
+
+    <div class="code-wrap">
+      <div class="code-header"><span class="file">Terminal — create the directory structure</span><span class="lang-badge">bash</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+      <div class="code-body"><pre>
+<span class="c"># Run from FintechApp-main root</span>
+mkdir -p observability/prometheus/rules
+mkdir -p observability/grafana/provisioning/datasources
+mkdir -p observability/grafana/provisioning/dashboards
+mkdir -p observability/grafana/dashboards
+mkdir -p observability/alertmanager
+</pre></div>
+    </div>
+
+    <div class="code-wrap">
+      <div class="code-header"><span class="file">observability/prometheus/prometheus.yml</span><span class="lang-badge">yaml</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+      <div class="code-body"><pre>
+<span class="c"># Prometheus configuration for local Docker Compose
+# After editing: curl -X POST http://localhost:9090/-/reload</span>
+
+global:
+  scrape_interval: 15s        <span class="c"># how often to scrape targets</span>
+  evaluation_interval: 15s    <span class="c"># how often to evaluate alerting rules</span>
+  external_labels:
+    environment: local
+    cluster: docker-compose
+
+<span class="c"># Load alerting rules from these files</span>
+rule_files:
+  - /etc/prometheus/rules/*.yml
+
+<span class="c"># Send alerts to Alertmanager</span>
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets: [<span class="s">"alertmanager:9093"</span>]
+
+scrape_configs:
+
+  <span class="c"># ── Prometheus itself ────────────────────────────────────────────────────</span>
+  - job_name: prometheus
+    static_configs:
+      - targets: [<span class="s">"localhost:9090"</span>]
+
+  <span class="c"># ── Account Service ──────────────────────────────────────────────────────</span>
+  - job_name: account-service
+    static_configs:
+      - targets: [<span class="s">"account-service:8081"</span>]
+        labels:
+          service: account-service
+          slot: blue
+          env: local
+    metrics_path: /metrics
+    scrape_interval: 10s    <span class="c"># faster locally for quick feedback</span>
+
+  <span class="c"># ── Auth Service ─────────────────────────────────────────────────────────</span>
+  - job_name: auth-service
+    static_configs:
+      - targets: [<span class="s">"auth-service:8082"</span>]
+        labels:
+          service: auth-service
+          slot: blue
+          env: local
+    metrics_path: /metrics
+
+  <span class="c"># ── Transaction Service ──────────────────────────────────────────────────</span>
+  - job_name: transaction-service
+    static_configs:
+      - targets: [<span class="s">"transaction-service:8083"</span>]
+        labels:
+          service: transaction-service
+          slot: blue
+          env: local
+    metrics_path: /metrics
+</pre></div>
+    </div>
+
+    <div class="code-wrap">
+      <div class="code-header"><span class="file">observability/grafana/provisioning/datasources/prometheus.yml</span><span class="lang-badge">yaml</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+      <div class="code-body"><pre>
+<span class="c"># Grafana auto-provisions this datasource on startup — no manual UI setup</span>
+apiVersion: 1
+datasources:
+  - name: Prometheus
+    type: prometheus
+    access: proxy
+    url: http://prometheus:9090
+    isDefault: true
+    editable: true
+    jsonData:
+      timeInterval: 15s
+      queryTimeout: 60s
+      httpMethod: POST
+</pre></div>
+    </div>
+
+    <div class="code-wrap">
+      <div class="code-header"><span class="file">observability/grafana/provisioning/dashboards/dashboards.yml</span><span class="lang-badge">yaml</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+      <div class="code-body"><pre>
+<span class="c"># Tell Grafana where to look for dashboard JSON files</span>
+apiVersion: 1
+providers:
+  - name: FintechApp
+    type: file
+    disableDeletion: false
+    updateIntervalSeconds: 30
+    allowUiUpdates: true
+    options:
+      path: /var/lib/grafana/dashboards
+</pre></div>
+    </div>
+
+    <div class="code-wrap">
+      <div class="code-header"><span class="file">observability/alertmanager/alertmanager.yml</span><span class="lang-badge">yaml</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+      <div class="code-body"><pre>
+<span class="c"># Local Alertmanager — routes to console (no real notifications locally)</span>
+global:
+  resolve_timeout: 5m
+
+route:
+  group_by: [alertname, service, slot]
+  group_wait: 10s
+  group_interval: 1m
+  repeat_interval: 1h
+  receiver: console
+
+receivers:
+  - name: console
+    webhook_configs:
+      - url: http://localhost:5001/    <span class="c"># dummy — replace with Slack/PagerDuty in prod</span>
+        send_resolved: true
+
+inhibit_rules:
+  - source_matchers: [severity=critical]
+    target_matchers: [severity=warning]
+    equal: [alertname, service]
+</pre></div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="section-eyebrow">Step 4</div>
+    <h2>Alert rules for local practice</h2>
+
+    <div class="code-wrap">
+      <div class="code-header"><span class="file">observability/prometheus/rules/fintech-alerts.yml</span><span class="lang-badge">yaml</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+      <div class="code-body"><pre>
+groups:
+  - name: fintech.errors
+    rules:
+      - alert: HighErrorRate
+        expr: |
+          sum by (service, slot) (rate(http_errors_total{error_class="server_error"}[5m]))
+          /
+          sum by (service, slot) (rate(http_requests_total[5m])) &gt; 0.02
+        for: 2m
+        labels: {severity: critical}
+        annotations:
+          summary: "{{ $labels.service }} error rate {{ $value | humanizePercentage }}"
+
+      - alert: High4xxRate
+        expr: |
+          sum by (service, slot) (rate(http_errors_total{error_class="client_error"}[5m]))
+          /
+          sum by (service, slot) (rate(http_requests_total[5m])) &gt; 0.10
+        for: 5m
+        labels: {severity: warning}
+        annotations:
+          summary: "{{ $labels.service }} 4xx rate elevated"
+
+  - name: fintech.latency
+    rules:
+      - alert: HighP95Latency
+        expr: |
+          histogram_quantile(0.95,
+            sum by (service, slot, le) (rate(http_request_duration_seconds_bucket[5m]))
+          ) &gt; 0.300
+        for: 5m
+        labels: {severity: critical}
+        annotations:
+          summary: "p95 latency SLO breach — {{ $labels.service }} ({{ $value | humanizeDuration }})"
+
+  - name: fintech.health
+    rules:
+      - alert: ServiceDown
+        expr: up{job=~"account-service|auth-service|transaction-service"} == 0
+        for: 1m
+        labels: {severity: critical}
+        annotations:
+          summary: "Service DOWN: {{ $labels.job }}"
+
+      - alert: DeadMansSwitch
+        expr: vector(1)
+        labels: {severity: none}
+        annotations:
+          summary: "Prometheus is alive and scraping"
+
+  - name: fintech.business
+    rules:
+      - alert: AuthFailureSpike
+        expr: |
+          rate(business_operations_total{operation="authentication",status="failure"}[5m]) &gt; 5
+        for: 3m
+        labels: {severity: warning}
+        annotations:
+          summary: "High auth failure rate — possible brute force"
+
+      - alert: TransactionSuccessRateLow
+        expr: |
+          rate(business_operations_total{operation="transaction",status="success"}[5m])
+          /
+          rate(business_operations_total{operation="transaction"}[5m]) &lt; 0.995
+        for: 5m
+        labels: {severity: critical}
+        annotations:
+          summary: "Transaction success rate below 99.5%"
+</pre></div>
+    </div>
+
+    <div class="code-wrap">
+      <div class="code-header"><span class="file">Terminal — lint your alert rules before using them</span><span class="lang-badge">bash</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+      <div class="code-body"><pre>
+<span class="c"># promtool checks for syntax errors and common mistakes</span>
+promtool check rules observability/prometheus/rules/fintech-alerts.yml
+
+<span class="c"># Expected output:
+# Checking observability/prometheus/rules/fintech-alerts.yml
+#   SUCCESS: 6 rules found</span>
+</pre></div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="section-eyebrow">Step 5</div>
+    <h2>Start the stack and verify it works</h2>
+
+    <div class="code-wrap">
+      <div class="code-header"><span class="file">Terminal — launch and verify</span><span class="lang-badge">bash</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+      <div class="code-body"><pre>
+<span class="c"># ── Build and start everything ───────────────────────────────────────────────</span>
+docker compose -f docker-compose.observability.yml up --build -d
+
+<span class="c"># ── Watch startup ────────────────────────────────────────────────────────────</span>
+docker compose -f docker-compose.observability.yml logs -f
+
+<span class="c"># ── Verify services are responding ──────────────────────────────────────────</span>
+curl http://localhost:8081/health     <span class="c"># account-service</span>
+curl http://localhost:8082/health     <span class="c"># auth-service</span>
+curl http://localhost:8083/health     <span class="c"># transaction-service</span>
+
+<span class="c"># ── Check /metrics endpoint is exposing data ─────────────────────────────────</span>
+curl -s http://localhost:8081/metrics | head -30
+curl -s http://localhost:8081/metrics | grep http_requests_total
+curl -s http://localhost:8081/metrics | grep http_request_duration
+
+<span class="c"># ── Verify Prometheus is scraping all targets ────────────────────────────────</span>
+<span class="c"># Open in browser: http://localhost:9090/targets</span>
+<span class="c"># All three services should show State: UP</span>
+
+<span class="c"># Or via API:</span>
+curl -s http://localhost:9090/api/v1/targets | jq '.data.activeTargets[] | {job:.labels.job, health:.health}'
+
+<span class="c"># ── Run a PromQL query to verify data is flowing ─────────────────────────────</span>
+curl -s 'http://localhost:9090/api/v1/query?query=up' | jq '.data.result'
+
+curl -s 'http://localhost:9090/api/v1/query?query=http_requests_total' | \
+  jq '.data.result | length'
+
+<span class="c"># ── Generate some traffic to see metrics change ──────────────────────────────</span>
+<span class="c"># Hit the endpoints repeatedly</span>
+for i in {1..20}; do
+  curl -s http://localhost:8081/health > /dev/null
+  curl -s http://localhost:8082/health > /dev/null
+  curl -s http://localhost:8083/health > /dev/null
+  sleep 0.2
+done
+
+<span class="c"># Hit a non-existent endpoint to generate 404s (4xx errors)</span>
+for i in {1..5}; do
+  curl -s http://localhost:8081/notfound > /dev/null
+done
+
+<span class="c"># ── Query p95 latency ─────────────────────────────────────────────────────────</span>
+curl -s 'http://localhost:9090/api/v1/query?query=histogram_quantile(0.95,rate(http_request_duration_seconds_bucket[5m]))' | \
+  jq '.data.result[] | {service:.metric.service, p95_ms: (.value[1] | tonumber * 1000 | round)}'
+
+<span class="c"># ── Open Grafana ─────────────────────────────────────────────────────────────</span>
+open http://localhost:3000
+<span class="c"># Login: admin / admin123</span>
+<span class="c"># Go to: Explore → select Prometheus datasource → run queries</span>
+</pre></div>
+    </div>
+
+    <div class="code-wrap">
+      <div class="code-header"><span class="file">Terminal — useful day-to-day commands</span><span class="lang-badge">bash</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+      <div class="code-body"><pre>
+<span class="c"># Hot-reload Prometheus config without restart (after editing prometheus.yml)</span>
+curl -X POST http://localhost:9090/-/reload
+
+<span class="c"># Hot-reload Alertmanager config</span>
+curl -X POST http://localhost:9093/-/reload
+
+<span class="c"># Watch all container logs in real time</span>
+docker compose -f docker-compose.observability.yml logs -f --tail=50
+
+<span class="c"># Restart just one service (e.g. after code change)</span>
+docker compose -f docker-compose.observability.yml restart account-service
+
+<span class="c"># Rebuild and restart one service only</span>
+docker compose -f docker-compose.observability.yml up --build account-service -d
+
+<span class="c"># Check Prometheus alert status</span>
+curl -s http://localhost:9090/api/v1/alerts | jq '.data.alerts[] | {name:.labels.alertname, state:.state}'
+
+<span class="c"># View all recorded metric names</span>
+curl -s http://localhost:9090/api/v1/label/__name__/values | jq '.data | .[] | select(startswith("http_") or startswith("business_"))'
+
+<span class="c"># Stop everything</span>
+docker compose -f docker-compose.observability.yml down
+
+<span class="c"># Stop and remove volumes (full reset)</span>
+docker compose -f docker-compose.observability.yml down -v
+</pre></div>
+    </div>
+
+    <div class="alert alert-success">
+      <strong>Phase 1 complete.</strong> You now have Prometheus scraping all three FintechApp services and Grafana ready to visualise the data. Hit <strong>Phase 2</strong> to run the same setup on real Kubernetes locally.
+    </div>
+  </section>
+
+</div><!-- /phase-p1 -->
+
+
+<!-- ═══════════════ PHASE 2 — KIND / LOCAL K8S ═══════════════ -->
+<div class="phase-content" id="phase-p2">
+
+  <section class="section">
+    <div class="section-eyebrow">Phase 2</div>
+    <h2>Real Kubernetes on your Mac with kind</h2>
+    <p class="section-lead">kind (Kubernetes IN Docker) creates a real, multi-node Kubernetes cluster locally. This is the closest you can get to EKS without an AWS bill. Same Helm charts, same kubectl commands.</p>
+
+    <div class="progress-bar"><div class="progress-fill" style="width:66%"></div></div>
+
+    <div class="alert alert-info">
+      <strong>Why kind over minikube?</strong> kind supports multi-node clusters (needed to simulate blue/green on separate nodes), integrates better with Docker, and is what most CI pipelines use for K8s testing. minikube works too — commands are largely identical, substitute <code>minikube start</code> for <code>kind create cluster</code>.
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="section-eyebrow">Step 1</div>
+    <h2>Create the kind cluster</h2>
+
+    <div class="code-wrap">
+      <div class="code-header"><span class="file">kind-config.yaml — save at project root</span><span class="lang-badge">yaml</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+      <div class="code-body"><pre>
+<span class="c"># kind cluster with 1 control-plane + 2 workers (simulates blue/green on different nodes)</span>
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+name: fintech-local
+nodes:
+  - role: control-plane
+    kubeadmConfigPatches:
+      - |
+        kind: InitConfiguration
+        nodeRegistration:
+          kubeletExtraArgs:
+            node-labels: "ingress-ready=true"
+    extraPortMappings:
+      - containerPort: 80
+        hostPort: 80      <span class="c"># Ingress on localhost:80</span>
+      - containerPort: 443
+        hostPort: 443
+      - containerPort: 30090
+        hostPort: 9090    <span class="c"># Prometheus NodePort</span>
+      - containerPort: 30030
+        hostPort: 3000    <span class="c"># Grafana NodePort</span>
+  - role: worker
+    labels:
+      slot: blue
+  - role: worker
+    labels:
+      slot: green
+</pre></div>
+    </div>
+
+    <div class="code-wrap">
+      <div class="code-header"><span class="file">Terminal — create cluster + namespaces</span><span class="lang-badge">bash</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+      <div class="code-body"><pre>
+<span class="c"># Create the cluster (takes ~2 min on first run while pulling images)</span>
+kind create cluster --config kind-config.yaml
+
+<span class="c"># Verify cluster is running</span>
+kubectl cluster-info --context kind-fintech-local
+kubectl get nodes -o wide
+
+<span class="c"># Expected:
+# NAME                          STATUS   ROLES           AGE
+# fintech-local-control-plane   Ready    control-plane   2m
+# fintech-local-worker          Ready    &lt;none&gt;          1m   slot=blue
+# fintech-local-worker2         Ready    &lt;none&gt;          1m   slot=green</span>
+
+<span class="c"># Create namespaces</span>
+kubectl create namespace banking
+kubectl create namespace monitoring
+
+<span class="c"># Label namespaces (Prometheus discovers by namespace label)</span>
+kubectl label namespace banking    purpose=app
+kubectl label namespace monitoring purpose=observability
+
+<span class="c"># Verify</span>
+kubectl get namespaces
+</pre></div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="section-eyebrow">Step 2</div>
+    <h2>Build and load your app images into kind</h2>
+    <p class="section-lead">kind has its own internal Docker registry. You need to build your images and <em>load</em> them into kind — they won't be pulled from Docker Hub.</p>
+
+    <div class="code-wrap">
+      <div class="code-header"><span class="file">Terminal — build + load images into kind</span><span class="lang-badge">bash</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+      <div class="code-body"><pre>
+<span class="c"># Build all three service images from your banking-services directory</span>
+cd FintechApp-main
+
+docker build -t account-service:local     -f banking-services/account-service/dockerfile     banking-services/
+docker build -t auth-service:local        -f banking-services/auth-service/dockerfile        banking-services/
+docker build -t transaction-service:local -f banking-services/transaction-service/dockerfile banking-services/
+
+<span class="c"># Load images into kind (bypasses Docker Hub completely)</span>
+kind load docker-image account-service:local     --name fintech-local
+kind load docker-image auth-service:local        --name fintech-local
+kind load docker-image transaction-service:local --name fintech-local
+
+<span class="c"># Verify images are in kind</span>
+docker exec fintech-local-control-plane crictl images | grep service
+
+<span class="c"># ── Create the MySQL secret (matches your banking-app Helm chart) ────────────</span>
+kubectl create secret generic mysql-secret \
+  --namespace banking \
+  --from-literal=root-password=bankingpassword123
+
+<span class="c"># Verify secret</span>
+kubectl get secret mysql-secret -n banking
+</pre></div>
+    </div>
+
+    <div class="alert alert-warn">
+      <strong>Update your values.yaml</strong> before deploying via Helm. Change <code>image.registry</code> to empty and <code>blueTag/greenTag</code> to <code>local</code>, and set <code>externalSecret.enabled: false</code> since we're using the manually created secret above.
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="section-eyebrow">Step 3</div>
+    <h2>Deploy your FintechApp via Helm (existing chart)</h2>
+
+    <div class="code-wrap">
+      <div class="code-header"><span class="file">Terminal — deploy FintechApp to local kind cluster</span><span class="lang-badge">bash</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+      <div class="code-body"><pre>
+<span class="c"># ── Override values for local kind (no external secret, local image) ─────────</span>
+helm upgrade --install banking-app ./banking-app \
+  --namespace banking \
+  --set image.registry="" \
+  --set image.pullPolicy=Never \
+  --set services.account.blueTag=local \
+  --set services.account.greenTag=local \
+  --set services.auth.blueTag=local \
+  --set services.auth.greenTag=local \
+  --set services.transaction.blueTag=local \
+  --set services.transaction.greenTag=local \
+  --set mysql.externalSecret.enabled=false \
+  --set activeSlot=blue \
+  --wait --timeout 3m
+
+<span class="c"># ── Verify pods are running ──────────────────────────────────────────────────</span>
+kubectl get pods -n banking -o wide
+kubectl get services -n banking
+
+<span class="c"># Expected:
+# account-service-blue    Running
+# account-service-green   Running
+# auth-service-blue       Running ... etc</span>
+
+<span class="c"># ── Port-forward to test locally (before Prometheus is up) ──────────────────</span>
+kubectl port-forward -n banking svc/account-service 8081:8081 &amp;
+curl http://localhost:8081/health
+curl http://localhost:8081/metrics | grep http_requests_total
+
+kill %1  <span class="c"># stop port-forward when done</span>
+</pre></div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="section-eyebrow">Step 4</div>
+    <h2>Install kube-prometheus-stack via Helm</h2>
+    <p class="section-lead">This single Helm chart installs Prometheus Operator, Prometheus, Alertmanager, node-exporter, kube-state-metrics, and Grafana. Production-grade, all in one.</p>
+
+    <div class="code-wrap">
+      <div class="code-header"><span class="file">helm/monitoring/local-values.yaml — local kind overrides</span><span class="lang-badge">yaml</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+      <div class="code-body"><pre>
+<span class="c"># Local kind values — lightweight, Grafana enabled (unlike prod where we use AMG)</span>
+
+prometheus:
+  prometheusSpec:
+    retention: 7d
+    storageSpec:
+      volumeClaimTemplate:
+        spec:
+          storageClassName: standard   <span class="c"># kind's default storage class</span>
+          resources:
+            requests:
+              storage: 5Gi
+    scrapeInterval: 15s
+    evaluationInterval: 15s
+    <span class="c"># Discover ServiceMonitors in ALL namespaces</span>
+    serviceMonitorSelectorNilUsesHelmValues: false
+    serviceMonitorNamespaceSelector: {}
+    podMonitorNamespaceSelector: {}
+    ruleNamespaceSelector: {}
+    resources:
+      requests: {cpu: 200m, memory: 512Mi}
+      limits:   {cpu: 500m, memory: 1Gi}
+
+<span class="c"># Enable Grafana locally (we skip this in prod, using AMG instead)</span>
+grafana:
+  enabled: true
+  adminPassword: admin123
+  service:
+    type: NodePort
+    nodePort: 30030
+  persistence:
+    enabled: true
+    size: 1Gi
+    storageClassName: standard
+  datasources:
+    datasources.yaml:
+      apiVersion: 1
+      datasources:
+        - name: Prometheus
+          type: prometheus
+          url: http://prometheus-kube-prometheus-prometheus:9090
+          isDefault: true
+  grafana.ini:
+    server:
+      root_url: http://localhost:3000
+
+alertmanager:
+  enabled: true
+  alertmanagerSpec:
+    storage:
+      volumeClaimTemplate:
+        spec:
+          storageClassName: standard
+          resources:
+            requests:
+              storage: 1Gi
+
+nodeExporter:
+  enabled: true
+
+kubeStateMetrics:
+  enabled: true
+</pre></div>
+    </div>
+
+    <div class="code-wrap">
+      <div class="code-header"><span class="file">Terminal — install kube-prometheus-stack</span><span class="lang-badge">bash</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+      <div class="code-body"><pre>
+<span class="c"># Install (takes ~3 min — downloads a lot of images)</span>
+helm upgrade --install prometheus \
+  prometheus-community/kube-prometheus-stack \
+  --namespace monitoring \
+  --values helm/monitoring/local-values.yaml \
+  --wait \
+  --timeout 10m
+
+<span class="c"># ── Watch pods come up (open separate terminal tab) ──────────────────────────</span>
+kubectl get pods -n monitoring -w
+
+<span class="c"># ── Or use k9s for a beautiful terminal UI ───────────────────────────────────</span>
+k9s --namespace monitoring
+
+<span class="c"># ── Verify all pods are Running ──────────────────────────────────────────────</span>
+kubectl get pods -n monitoring
+<span class="c"># Expected pods:
+# alertmanager-prometheus-kube-prometheus-alertmanager-0   Running
+# prometheus-grafana-xxx                                   Running
+# prometheus-kube-prometheus-operator-xxx                  Running
+# prometheus-kube-prometheus-prometheus-0                  Running
+# prometheus-kube-state-metrics-xxx                        Running
+# prometheus-prometheus-node-exporter-xxx (one per node)   Running</span>
+
+<span class="c"># ── Access Prometheus UI ─────────────────────────────────────────────────────</span>
+<span class="c"># Via NodePort (mapped in kind config to host port 9090)</span>
+kubectl patch svc prometheus-kube-prometheus-prometheus -n monitoring \
+  --type='json' -p='[{"op":"replace","path":"/spec/type","value":"NodePort"},{"op":"replace","path":"/spec/ports/0/nodePort","value":30090}]'
+
+open http://localhost:9090
+
+<span class="c"># ── Access Grafana UI ────────────────────────────────────────────────────────</span>
+<span class="c"># Already NodePort 30030 → mapped to localhost:3000 in kind-config.yaml</span>
+open http://localhost:3000
+<span class="c"># Login: admin / admin123</span>
+</pre></div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="section-eyebrow">Step 5</div>
+    <h2>Deploy ServiceMonitors — tell Prometheus to scrape your app</h2>
+
+    <div class="code-wrap">
+      <div class="code-header"><span class="file">kubernetes/monitoring/service-monitors.yaml</span><span class="lang-badge">yaml</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+      <div class="code-body"><pre>
+<span class="c">---</span>
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: account-service
+  namespace: monitoring
+  labels:
+    release: prometheus    <span class="c"># MUST match the Helm release name</span>
+spec:
+  namespaceSelector:
+    matchNames: [banking]
+  selector:
+    matchLabels:
+      app: account-service
+  endpoints:
+  - port: http
+    path: /metrics
+    interval: 15s
+    relabelings:
+    <span class="c"># Carry the pod's slot label into every metric</span>
+    - sourceLabels: [__meta_kubernetes_pod_label_slot]
+      targetLabel: slot
+    - targetLabel: service
+      replacement: account-service
+<span class="c">---</span>
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: auth-service
+  namespace: monitoring
+  labels:
+    release: prometheus
+spec:
+  namespaceSelector:
+    matchNames: [banking]
+  selector:
+    matchLabels:
+      app: auth-service
+  endpoints:
+  - port: http
+    path: /metrics
+    interval: 15s
+    relabelings:
+    - sourceLabels: [__meta_kubernetes_pod_label_slot]
+      targetLabel: slot
+    - targetLabel: service
+      replacement: auth-service
+<span class="c">---</span>
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: transaction-service
+  namespace: monitoring
+  labels:
+    release: prometheus
+spec:
+  namespaceSelector:
+    matchNames: [banking]
+  selector:
+    matchLabels:
+      app: transaction-service
+  endpoints:
+  - port: http
+    path: /metrics
+    interval: 15s
+    relabelings:
+    - sourceLabels: [__meta_kubernetes_pod_label_slot]
+      targetLabel: slot
+    - targetLabel: service
+      replacement: transaction-service
+</pre></div>
+    </div>
+
+    <div class="code-wrap">
+      <div class="code-header"><span class="file">Terminal — apply monitors + verify scraping</span><span class="lang-badge">bash</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+      <div class="code-body"><pre>
+<span class="c"># Apply ServiceMonitors and alert rules</span>
+kubectl apply -f kubernetes/monitoring/service-monitors.yaml
+kubectl apply -f kubernetes/monitoring/recording-rules.yaml   <span class="c"># create this below</span>
+kubectl apply -f kubernetes/monitoring/alert-rules.yaml       <span class="c"># create this below</span>
+
+<span class="c"># Verify ServiceMonitors are registered</span>
+kubectl get servicemonitor -n monitoring
+
+<span class="c"># Wait 30 seconds for Prometheus to pick up new targets, then check</span>
+sleep 30
+
+<span class="c"># Check targets via Prometheus API</span>
+kubectl exec -n monitoring \
+  $(kubectl get pod -n monitoring -l app.kubernetes.io/name=prometheus -o jsonpath='{.items[0].metadata.name}') \
+  -- curl -s http://localhost:9090/api/v1/targets | \
+  jq '.data.activeTargets[] | select(.labels.namespace == "banking") | {job:.labels.job, health:.health, slot:.labels.slot}'
+
+<span class="c"># Run a PromQL query inside the Prometheus pod</span>
+kubectl exec -n monitoring \
+  $(kubectl get pod -n monitoring -l app.kubernetes.io/name=prometheus -o jsonpath='{.items[0].metadata.name}') \
+  -- curl -s 'http://localhost:9090/api/v1/query?query=up{namespace="banking"}' | \
+  jq '.data.result[] | {job:.metric.job, slot:.metric.slot, up:.value[1]}'
+</pre></div>
+    </div>
+
+    <div class="code-wrap">
+      <div class="code-header"><span class="file">kubernetes/monitoring/recording-rules.yaml</span><span class="lang-badge">yaml</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+      <div class="code-body"><pre>
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: fintech-recording-rules
+  namespace: monitoring
+  labels:
+    release: prometheus
+spec:
+  groups:
+  - name: fintech.http.rates
+    interval: 15s
+    rules:
+    <span class="c"># Pre-compute request rate — dashboards use this for performance</span>
+    - record: job:http_requests:rate5m
+      expr: |
+        sum by (service, slot) (rate(http_requests_total[5m]))
+
+    - record: job:http_5xx_errors:rate5m
+      expr: |
+        sum by (service, slot) (
+          rate(http_errors_total{error_class="server_error"}[5m])
+        )
+
+    - record: job:http_4xx_errors:rate5m
+      expr: |
+        sum by (service, slot) (
+          rate(http_errors_total{error_class="client_error"}[5m])
+        )
+
+    - record: job:http_error_ratio:rate5m
+      expr: |
+        job:http_5xx_errors:rate5m / (job:http_requests:rate5m &gt; 0)
+
+  - name: fintech.latency
+    interval: 15s
+    rules:
+    - record: job:http_request_duration_p50:5m
+      expr: |
+        histogram_quantile(0.50,
+          sum by (service, slot, le) (rate(http_request_duration_seconds_bucket[5m]))
+        )
+
+    - record: job:http_request_duration_p95:5m
+      expr: |
+        histogram_quantile(0.95,
+          sum by (service, slot, le) (rate(http_request_duration_seconds_bucket[5m]))
+        )
+
+    - record: job:http_request_duration_p99:5m
+      expr: |
+        histogram_quantile(0.99,
+          sum by (service, slot, le) (rate(http_request_duration_seconds_bucket[5m]))
+        )
+
+  - name: fintech.business
+    interval: 15s
+    rules:
+    - record: job:transaction_success_rate:5m
+      expr: |
+        rate(business_operations_total{operation="transaction",status="success"}[5m])
+        / rate(business_operations_total{operation="transaction"}[5m])
+
+    - record: job:auth_success_rate:5m
+      expr: |
+        rate(business_operations_total{operation="authentication",status="success"}[5m])
+        / rate(business_operations_total{operation="authentication"}[5m])
+</pre></div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="section-eyebrow">Step 6</div>
+    <h2>Generate load and watch metrics live</h2>
+
+    <div class="code-wrap">
+      <div class="code-header"><span class="file">Terminal — generate traffic + watch in real time</span><span class="lang-badge">bash</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+      <div class="code-body"><pre>
+<span class="c"># Port-forward all three services in background tabs</span>
+kubectl port-forward -n banking svc/account-service     8081:8081 &amp;
+kubectl port-forward -n banking svc/auth-service        8082:8082 &amp;
+kubectl port-forward -n banking svc/transaction-service 8083:8083 &amp;
+
+<span class="c"># ── Load generator — runs for 60 seconds ─────────────────────────────────────</span>
+end=$((SECONDS+60))
+while [ $SECONDS -lt $end ]; do
+  curl -s http://localhost:8081/health &gt; /dev/null
+  curl -s http://localhost:8082/health &gt; /dev/null
+  curl -s http://localhost:8083/health &gt; /dev/null
+  curl -s http://localhost:8081/accounts &gt; /dev/null      <span class="c"># real endpoint</span>
+  curl -s http://localhost:8081/notexist &gt; /dev/null      <span class="c"># triggers 404 (4xx counter)</span>
+  sleep 0.5
+done
+
+<span class="c"># ── Watch key metrics change ──────────────────────────────────────────────────</span>
+<span class="c"># In a loop, print p95 latency every 5 seconds</span>
+watch -n5 'curl -s "http://localhost:9090/api/v1/query?query=job:http_request_duration_p95:5m" | jq ".data.result[] | {service:.metric.service, slot:.metric.slot, p95_ms:(.value[1] | tonumber * 1000 | floor)}"'
+
+<span class="c"># ── 4xx rate ─────────────────────────────────────────────────────────────────</span>
+curl -s 'http://localhost:9090/api/v1/query?query=job:http_4xx_errors:rate5m' | \
+  jq '.data.result[] | {service:.metric.service, rate:.value[1]}'
+
+<span class="c"># ── Error ratio ──────────────────────────────────────────────────────────────</span>
+curl -s 'http://localhost:9090/api/v1/query?query=job:http_error_ratio:rate5m' | \
+  jq '.data.result[] | {service:.metric.service, ratio:.value[1]}'
+
+<span class="c"># ── In-flight requests ───────────────────────────────────────────────────────</span>
+curl -s 'http://localhost:9090/api/v1/query?query=http_requests_in_flight' | \
+  jq '.data.result'
+
+<span class="c"># ── Service info (version + slot) ────────────────────────────────────────────</span>
+curl -s 'http://localhost:9090/api/v1/query?query=service_build_info' | \
+  jq '.data.result[] | .metric'
+
+<span class="c"># Stop port-forwards when done</span>
+kill $(lsof -ti:8081,8082,8083)
+</pre></div>
+    </div>
+
+    <div class="code-wrap">
+      <div class="code-header"><span class="file">Terminal — simulate blue→green cutover and compare metrics</span><span class="lang-badge">bash</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+      <div class="code-body"><pre>
+<span class="c"># ── Flip the active slot from blue to green ───────────────────────────────────</span>
+helm upgrade banking-app ./banking-app \
+  --namespace banking \
+  --reuse-values \
+  --set activeSlot=green \
+  --wait
+
+<span class="c"># ── Verify service selector changed ──────────────────────────────────────────</span>
+kubectl get svc account-service -n banking -o jsonpath='{.spec.selector}' | jq
+<span class="c"># Should now show: {"app":"account-service","slot":"green"}</span>
+
+<span class="c"># ── Compare blue vs green error rates via PromQL ─────────────────────────────</span>
+<span class="c"># (Both slots still have Prometheus scraping them via ServiceMonitor)</span>
+curl -s 'http://localhost:9090/api/v1/query?query=job:http_error_ratio:rate5m' | \
+  jq '.data.result[] | {service:.metric.service, slot:.metric.slot, ratio:.value[1]}'
+
+<span class="c"># ── Flip back to blue ────────────────────────────────────────────────────────</span>
+helm upgrade banking-app ./banking-app \
+  --namespace banking \
+  --reuse-values \
+  --set activeSlot=blue
+</pre></div>
+    </div>
+
+    <div class="alert alert-success">
+      <strong>Phase 2 complete.</strong> You're running a full Kubernetes observability stack locally. kube-prometheus-stack, ServiceMonitors, PromQL queries, and blue/green metrics comparison — all from your Mac terminal. Now move to Phase 3 for the real EKS deployment.
+    </div>
+
+    <div class="code-wrap">
+      <div class="code-header"><span class="file">Terminal — cleanup kind cluster when done</span><span class="lang-badge">bash</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+      <div class="code-body"><pre>
+<span class="c"># Delete everything (frees RAM and disk)</span>
+kind delete cluster --name fintech-local
+
+<span class="c"># Verify it's gone</span>
+kind get clusters
+</pre></div>
+    </div>
+  </section>
+
+</div><!-- /phase-p2 -->
+
+
+<!-- ═══════════════ PHASE 3 — EKS PRODUCTION ═══════════════ -->
+<div class="phase-content" id="phase-p3">
+
+  <section class="section">
+    <div class="section-eyebrow">Phase 3</div>
+    <h2>EKS + AWS Managed Prometheus — production</h2>
+    <p class="section-lead">Same Helm charts and kubectl commands as Phase 2, with two additions: AWS CLI to create an AMP workspace, and IRSA to give Prometheus permission to write to it. No Terraform needed.</p>
+
+    <div class="progress-bar"><div class="progress-fill" style="width:100%"></div></div>
+
+    <div class="alert alert-warn">
+      <strong>Prerequisites:</strong> AWS CLI configured (<code>aws configure</code>), EKS cluster already running (from your existing setup), OIDC provider enabled on the cluster. Your blue-green Helm deploy should already be working.
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="section-eyebrow">Step 1</div>
+    <h2>Configure AWS CLI and connect to your EKS cluster</h2>
+
+    <div class="code-wrap">
+      <div class="code-header"><span class="file">Terminal — AWS + EKS setup</span><span class="lang-badge">bash</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+      <div class="code-body"><pre>
+<span class="c"># ── Configure AWS CLI (if not already done) ──────────────────────────────────</span>
+aws configure
+<span class="c"># Enter: AWS Access Key ID, Secret Key, region (e.g. us-east-1), output format (json)</span>
+
+<span class="c"># ── Or use SSO (recommended for teams) ──────────────────────────────────────</span>
+aws sso login --profile fintech-prod
+
+<span class="c"># ── Update kubeconfig to point at your EKS cluster ──────────────────────────</span>
+aws eks update-kubeconfig \
+  --name fintech-prod \
+  --region us-east-1
+
+<span class="c"># Verify you're connected to EKS (not your local kind cluster)</span>
+kubectl config current-context
+<span class="c"># Should show: arn:aws:eks:us-east-1:ACCOUNT:cluster/fintech-prod</span>
+
+kubectl get nodes
+kubectl get pods -n banking    <span class="c"># your existing blue-green app</span>
+
+<span class="c"># ── Get cluster details we'll need later ────────────────────────────────────</span>
+CLUSTER_NAME=fintech-prod
+REGION=us-east-1
+ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+
+<span class="c"># Get the OIDC provider URL (needed for IRSA)</span>
+OIDC_URL=$(aws eks describe-cluster --name $CLUSTER_NAME --query cluster.identity.oidc.issuer --output text)
+OIDC_HOST=$(echo $OIDC_URL | sed 's|https://||')
+
+echo "Account:   $ACCOUNT_ID"
+echo "OIDC URL:  $OIDC_URL"
+echo "OIDC Host: $OIDC_HOST"
+
+<span class="c"># ── Enable OIDC provider if not already done ─────────────────────────────────</span>
+eksctl utils associate-iam-oidc-provider \
+  --cluster $CLUSTER_NAME \
+  --region $REGION \
+  --approve
+</pre></div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="section-eyebrow">Step 2</div>
+    <h2>Create AWS Managed Prometheus workspace</h2>
+
+    <div class="code-wrap">
+      <div class="code-header"><span class="file">Terminal — create AMP workspace with AWS CLI</span><span class="lang-badge">bash</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+      <div class="code-body"><pre>
+<span class="c"># ── Create AMP workspace ─────────────────────────────────────────────────────</span>
+AMP_WORKSPACE=$(aws amp create-workspace \
+  --alias fintech-metrics-prod \
+  --region $REGION \
+  --query workspaceId \
+  --output text)
+
+echo "AMP Workspace ID: $AMP_WORKSPACE"
+
+<span class="c"># ── Wait for it to become ACTIVE ─────────────────────────────────────────────</span>
+aws amp describe-workspace \
+  --workspace-id $AMP_WORKSPACE \
+  --region $REGION \
+  --query workspace.status
+
+<span class="c"># ── Get the remote_write endpoint ────────────────────────────────────────────</span>
+AMP_ENDPOINT=$(aws amp describe-workspace \
+  --workspace-id $AMP_WORKSPACE \
+  --region $REGION \
+  --query workspace.prometheusEndpoint \
+  --output text)
+
+REMOTE_WRITE_URL="${AMP_ENDPOINT}api/v1/remote_write"
+echo "Remote Write URL: $REMOTE_WRITE_URL"
+<span class="c"># Save these — you'll use them in helm values</span>
+
+<span class="c"># ── Tag the workspace ─────────────────────────────────────────────────────────</span>
+aws amp tag-resource \
+  --resource-arn "arn:aws:aps:${REGION}:${ACCOUNT_ID}:workspace/${AMP_WORKSPACE}" \
+  --tags Env=production,App=fintech \
+  --region $REGION
+
+<span class="c"># ── List all workspaces (verify) ─────────────────────────────────────────────</span>
+aws amp list-workspaces --region $REGION --query 'workspaces[].{ID:workspaceId,Alias:alias,Status:status.statusCode}'
+</pre></div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="section-eyebrow">Step 3</div>
+    <h2>Create IRSA role — Prometheus → AMP write permission</h2>
+    <p class="section-lead">IRSA (IAM Roles for Service Accounts) lets your Kubernetes pods assume an AWS IAM role without static credentials. This is how Prometheus gets permission to write to AMP.</p>
+
+    <div class="code-wrap">
+      <div class="code-header"><span class="file">Terminal — create IAM role for Prometheus (pure AWS CLI)</span><span class="lang-badge">bash</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+      <div class="code-body"><pre>
+<span class="c"># ── 1. Create the trust policy document ──────────────────────────────────────</span>
+cat &gt; /tmp/prometheus-trust-policy.json &lt;&lt; EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Federated": "arn:aws:iam::${ACCOUNT_ID}:oidc-provider/${OIDC_HOST}"
+      },
+      "Action": "sts:AssumeRoleWithWebIdentity",
+      "Condition": {
+        "StringEquals": {
+          "${OIDC_HOST}:sub": "system:serviceaccount:monitoring:prometheus-kube-prometheus-prometheus",
+          "${OIDC_HOST}:aud": "sts.amazonaws.com"
+        }
+      }
+    }
+  ]
+}
+EOF
+
+cat /tmp/prometheus-trust-policy.json  <span class="c"># verify before creating</span>
+
+<span class="c"># ── 2. Create the IAM role ───────────────────────────────────────────────────</span>
+ROLE_ARN=$(aws iam create-role \
+  --role-name fintech-prometheus-amp-write \
+  --assume-role-policy-document file:///tmp/prometheus-trust-policy.json \
+  --description "IRSA role for Prometheus to write to AMP" \
+  --query Role.Arn \
+  --output text)
+
+echo "Role ARN: $ROLE_ARN"
+
+<span class="c"># ── 3. Attach the AWS managed AMP policy ────────────────────────────────────</span>
+aws iam attach-role-policy \
+  --role-name fintech-prometheus-amp-write \
+  --policy-arn arn:aws:iam::aws:policy/AmazonPrometheusRemoteWriteAccess
+
+<span class="c"># ── 4. Add additional permissions (query + rules) ────────────────────────────</span>
+cat &gt; /tmp/prometheus-amp-policy.json &lt;&lt; EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "aps:RemoteWrite",
+        "aps:QueryMetrics",
+        "aps:GetSeries",
+        "aps:GetLabels",
+        "aps:GetMetricMetadata"
+      ],
+      "Resource": "arn:aws:aps:${REGION}:${ACCOUNT_ID}:workspace/${AMP_WORKSPACE}"
+    }
+  ]
+}
+EOF
+
+aws iam put-role-policy \
+  --role-name fintech-prometheus-amp-write \
+  --policy-name amp-scoped-access \
+  --policy-document file:///tmp/prometheus-amp-policy.json
+
+<span class="c"># ── 5. Verify the role ───────────────────────────────────────────────────────</span>
+aws iam get-role --role-name fintech-prometheus-amp-write --query Role.Arn
+aws iam list-attached-role-policies --role-name fintech-prometheus-amp-write
+</pre></div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="section-eyebrow">Step 4</div>
+    <h2>Install kube-prometheus-stack with AMP remote_write</h2>
+
+    <div class="code-wrap">
+      <div class="code-header"><span class="file">helm/monitoring/eks-prod-values.yaml</span><span class="lang-badge">yaml</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+      <div class="code-body"><pre>
+<span class="c"># Production EKS values — remote_write to AMP, no in-cluster Grafana (use AMG)</span>
+
+prometheus:
+  serviceAccount:
+    annotations:
+      eks.amazonaws.com/role-arn: "PASTE_ROLE_ARN_HERE"  <span class="c"># from $ROLE_ARN above</span>
+
+  prometheusSpec:
+    retention: 24h          <span class="c"># local buffer only — AMP stores long-term</span>
+    retentionSize: 10GB
+
+    storageSpec:
+      volumeClaimTemplate:
+        spec:
+          storageClassName: gp3
+          resources:
+            requests:
+              storage: 20Gi
+
+    scrapeInterval: 15s
+    evaluationInterval: 15s
+
+    serviceMonitorSelectorNilUsesHelmValues: false
+    serviceMonitorNamespaceSelector: {}
+    podMonitorNamespaceSelector: {}
+    ruleNamespaceSelector: {}
+
+    remoteWrite:
+    - url: "PASTE_REMOTE_WRITE_URL_HERE"   <span class="c"># from $REMOTE_WRITE_URL above</span>
+      sigv4:
+        region: us-east-1
+      queueConfig:
+        capacity: 10000
+        maxSamplesPerSend: 1000
+        maxShards: 10
+        batchSendDeadline: 5s
+      writeRelabelConfigs:
+      <span class="c"># Drop high-cardinality transient labels before shipping to AMP</span>
+      - action: labeldrop
+        regex: '(pod_template_hash|controller_revision_hash)'
+
+    resources:
+      requests: {cpu: 500m, memory: 1Gi}
+      limits:   {cpu: "1",  memory: 2Gi}
+
+grafana:
+  enabled: false   <span class="c"># using AWS Managed Grafana instead</span>
+
+alertmanager:
+  enabled: true
+  alertmanagerSpec:
+    replicas: 2
+    storage:
+      volumeClaimTemplate:
+        spec:
+          storageClassName: gp3
+          resources:
+            requests:
+              storage: 2Gi
+
+nodeExporter:
+  enabled: true
+
+kubeStateMetrics:
+  enabled: true
+</pre></div>
+    </div>
+
+    <div class="code-wrap">
+      <div class="code-header"><span class="file">Terminal — deploy to EKS</span><span class="lang-badge">bash</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+      <div class="code-body"><pre>
+<span class="c"># ── Substitute real values into the helm values file ─────────────────────────</span>
+sed -i '' "s|PASTE_ROLE_ARN_HERE|${ROLE_ARN}|g" helm/monitoring/eks-prod-values.yaml
+sed -i '' "s|PASTE_REMOTE_WRITE_URL_HERE|${REMOTE_WRITE_URL}|g" helm/monitoring/eks-prod-values.yaml
+
+<span class="c"># ── Create monitoring namespace ───────────────────────────────────────────────</span>
+kubectl create namespace monitoring --dry-run=client -o yaml | kubectl apply -f -
+
+<span class="c"># ── Install kube-prometheus-stack ────────────────────────────────────────────</span>
+helm upgrade --install prometheus \
+  prometheus-community/kube-prometheus-stack \
+  --namespace monitoring \
+  --values helm/monitoring/eks-prod-values.yaml \
+  --wait \
+  --timeout 10m
+
+<span class="c"># ── Apply your ServiceMonitors + rules ───────────────────────────────────────</span>
+kubectl apply -f kubernetes/monitoring/service-monitors.yaml
+kubectl apply -f kubernetes/monitoring/recording-rules.yaml
+
+<span class="c"># ── Verify Prometheus pod is running and has IRSA ────────────────────────────</span>
+PROM_POD=$(kubectl get pod -n monitoring -l app.kubernetes.io/name=prometheus -o jsonpath='{.items[0].metadata.name}')
+kubectl describe pod $PROM_POD -n monitoring | grep -A2 "AWS_ROLE"
+<span class="c"># Should show: AWS_ROLE_ARN=arn:aws:iam::...</span>
+
+<span class="c"># ── Test remote_write is working ─────────────────────────────────────────────</span>
+<span class="c"># Check Prometheus logs for remote_write errors</span>
+kubectl logs $PROM_POD -n monitoring --tail=50 | grep -i "remote"
+
+<span class="c"># ── Verify data appears in AMP ────────────────────────────────────────────────</span>
+aws amp query-metrics \
+  --workspace-id $AMP_WORKSPACE \
+  --region $REGION \
+  --query 'count(up{namespace="banking"})' 2&gt;/dev/null || echo "Use awscurl for AMP queries"
+
+<span class="c"># Install awscurl for authenticated AMP queries</span>
+pip3 install awscurl
+
+awscurl --service aps \
+  "${AMP_ENDPOINT}api/v1/query?query=up" \
+  --region $REGION | jq '.data.result[] | {job:.metric.job, up:.value[1]}'
+
+<span class="c"># ── Check Prometheus targets from inside the pod ─────────────────────────────</span>
+kubectl exec -n monitoring $PROM_POD -- \
+  curl -s http://localhost:9090/api/v1/targets | \
+  jq '.data.activeTargets[] | select(.labels.namespace=="banking") | {job:.labels.job, health:.health}'
+</pre></div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="section-eyebrow">Step 5</div>
+    <h2>Set up AWS Managed Grafana with AWS CLI</h2>
+
+    <div class="code-wrap">
+      <div class="code-header"><span class="file">Terminal — create AMG workspace + connect to AMP</span><span class="lang-badge">bash</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+      <div class="code-body"><pre>
+<span class="c"># ── Create AMG workspace ─────────────────────────────────────────────────────</span>
+<span class="c"># Note: AMG requires AWS SSO to be configured in your account</span>
+AMG_ID=$(aws grafana create-workspace \
+  --account-access-type CURRENT_ACCOUNT \
+  --authentication-providers AWS_SSO \
+  --permission-type SERVICE_MANAGED \
+  --workspace-name fintech-prod \
+  --workspace-description "FintechApp production observability" \
+  --workspace-data-sources PROMETHEUS CLOUDWATCH \
+  --region $REGION \
+  --query workspace.id \
+  --output text)
+
+echo "AMG Workspace ID: $AMG_ID"
+
+<span class="c"># ── Wait for it to become ACTIVE ─────────────────────────────────────────────</span>
+aws grafana describe-workspace --workspace-id $AMG_ID --region $REGION \
+  --query workspace.status
+
+<span class="c"># ── Add yourself as an admin ─────────────────────────────────────────────────</span>
+<span class="c"># First get your SSO user ID</span>
+YOUR_USER_ID=$(aws identitystore list-users \
+  --identity-store-id $(aws sso-admin list-instances --query 'Instances[0].IdentityStoreId' --output text) \
+  --filter AttributePath=UserName,AttributeValue=YOUR_EMAIL@company.com \
+  --query 'Users[0].UserId' --output text)
+
+aws grafana update-permissions \
+  --workspace-id $AMG_ID \
+  --update-instruction-batch \
+    "action=ADD,role=ADMIN,users=[{id=${YOUR_USER_ID},type=SSO_USER}]" \
+  --region $REGION
+
+<span class="c"># ── Get the Grafana URL ───────────────────────────────────────────────────────</span>
+GRAFANA_URL=$(aws grafana describe-workspace \
+  --workspace-id $AMG_ID \
+  --region $REGION \
+  --query workspace.endpoint \
+  --output text)
+echo "Grafana URL: https://${GRAFANA_URL}"
+open "https://${GRAFANA_URL}"
+
+<span class="c"># ── Create an API key for programmatic dashboard provisioning ────────────────</span>
+GRAFANA_API_KEY=$(aws grafana create-workspace-api-key \
+  --key-name automation \
+  --key-role ADMIN \
+  --seconds-to-live 86400 \
+  --workspace-id $AMG_ID \
+  --region $REGION \
+  --query key \
+  --output text)
+
+<span class="c"># ── Add AMP as a data source in AMG via Grafana API ─────────────────────────</span>
+curl -X POST "https://${GRAFANA_URL}/api/datasources" \
+  -H "Authorization: Bearer ${GRAFANA_API_KEY}" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "AMP-Fintech",
+    "type": "prometheus",
+    "access": "proxy",
+    "url": "'"${AMP_ENDPOINT}api/v1/"'",
+    "isDefault": true,
+    "jsonData": {
+      "sigV4Auth": true,
+      "sigV4Region": "'"${REGION}"'",
+      "sigV4AuthType": "workspace-iam-role",
+      "httpMethod": "POST",
+      "timeInterval": "15s"
+    }
+  }' | jq
+
+<span class="c"># ── Test the datasource ───────────────────────────────────────────────────────</span>
+curl -s "https://${GRAFANA_URL}/api/datasources" \
+  -H "Authorization: Bearer ${GRAFANA_API_KEY}" | jq '.[].name'
+</pre></div>
+    </div>
+  </section>
+
+</div><!-- /phase-p3 -->
+
+
+<!-- ═══════════════ PHASE 4 — GRAFANA DASHBOARDS ═══════════════ -->
+<div class="phase-content" id="phase-p4">
+
+  <section class="section">
+    <div class="section-eyebrow">Phase 4</div>
+    <h2>Import and build Grafana dashboards</h2>
+    <p class="section-lead">Three approaches: import community dashboards (fastest), upload JSON (repeatable, GitOps), or build panels manually (full control). All via CLI or Grafana API.</p>
+  </section>
+
+  <!-- MOCKUP -->
+  <div class="grafana-mockup">
+    <div class="graf-topbar">
+      <span style="color:#f46800;font-weight:700">▲ Grafana</span>
+      <span class="graf-title">FintechApp — Service Health</span>
+      <span style="margin-left:auto;font-size:10.5px">Last 30m · 15s refresh</span>
+      <span style="background:#2d3748;padding:2px 8px;border-radius:4px;font-size:10.5px">slot: all ▾</span>
+    </div>
+    <div class="graf-panels">
+      <div class="graf-panel">
+        <div class="graf-panel-title">5xx Error Rate — account-svc</div>
+        <div class="graf-panel-val" style="color:#3dd68c">0.01%</div>
+        <div class="graf-panel-trend trend-ok">↓ well within SLO</div>
+      </div>
+      <div class="graf-panel">
+        <div class="graf-panel-title">p95 Latency — transaction-svc</div>
+        <div class="graf-panel-val" style="color:#fbbf24">271ms</div>
+        <div class="graf-panel-trend trend-warn">→ SLO: 300ms</div>
+      </div>
+      <div class="graf-panel">
+        <div class="graf-panel-title">Request Rate — auth-svc</div>
+        <div class="graf-panel-val">138<span style="font-size:1rem">/s</span></div>
+        <div class="graf-panel-trend trend-ok">↑ +8% vs 30m ago</div>
+      </div>
+      <div class="graf-panel">
+        <div class="graf-panel-title">Transaction Success Rate</div>
+        <div class="graf-panel-val" style="color:#3dd68c">99.8%</div>
+        <div class="graf-panel-trend trend-ok">SLO: ≥99.5%</div>
+      </div>
+    </div>
+    <div class="graf-chart-area">
+      <div style="font-size:9.5px;color:#6b7280;margin-bottom:.35rem;text-transform:uppercase;letter-spacing:.5px">p50 / p95 latency — 30m window</div>
+      <svg viewBox="0 0 800 70" style="width:100%;height:55px">
+        <defs>
+          <linearGradient id="ga" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#3b82f6" stop-opacity=".25"/><stop offset="100%" stop-color="#3b82f6" stop-opacity="0"/></linearGradient>
+          <linearGradient id="gb" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#fbbf24" stop-opacity=".25"/><stop offset="100%" stop-color="#fbbf24" stop-opacity="0"/></linearGradient>
+        </defs>
+        <path d="M0,58 C60,54 120,50 180,52 C240,54 300,47 360,44 C420,41 480,46 540,42 C600,38 660,40 720,37 C760,35 785,36 800,36 L800,70 L0,70Z" fill="url(#ga)"/>
+        <path d="M0,58 C60,54 120,50 180,52 C240,54 300,47 360,44 C420,41 480,46 540,42 C600,38 660,40 720,37 C760,35 785,36 800,36" fill="none" stroke="#3b82f6" stroke-width="1.5"/>
+        <path d="M0,38 C60,34 120,40 180,32 C240,24 300,30 360,22 C420,20 480,26 540,20 C600,14 660,18 720,12 C760,10 785,14 800,11 L800,70 L0,70Z" fill="url(#gb)"/>
+        <path d="M0,38 C60,34 120,40 180,32 C240,24 300,30 360,22 C420,20 480,26 540,20 C600,14 660,18 720,12 C760,10 785,14 800,11" fill="none" stroke="#fbbf24" stroke-width="1.5"/>
+        <line x1="0" y1="13" x2="800" y2="13" stroke="#f87171" stroke-width="1" stroke-dasharray="4 3"/>
+        <text x="795" y="10" fill="#f87171" font-size="8" text-anchor="end" font-family="monospace">SLO 300ms</text>
+      </svg>
+    </div>
+  </div>
+
+  <section class="section">
+    <div class="section-eyebrow">Method 1 — Community Dashboards</div>
+    <h2>Import pre-built dashboards via CLI</h2>
+
+    <div class="code-wrap">
+      <div class="code-header"><span class="file">Terminal — import Grafana community dashboards</span><span class="lang-badge">bash</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+      <div class="code-body"><pre>
+<span class="c"># Set Grafana endpoint (local or AMG)</span>
+<span class="c"># Local:  GRAFANA_URL=http://localhost:3000  GRAFANA_AUTH="admin:admin123"</span>
+<span class="c"># AMG:    GRAFANA_URL=https://xxx.grafana.net  GRAFANA_AUTH="Bearer $GRAFANA_API_KEY"</span>
+
+GRAFANA_URL=http://localhost:3000
+GRAFANA_AUTH="admin:admin123"
+
+<span class="c"># ── Helper function to import by dashboard ID ────────────────────────────────</span>
+import_dashboard() {
+  local DASH_ID=$1
+  local DS_NAME=${2:-"Prometheus"}
+  echo "Importing dashboard ID: $DASH_ID"
+  curl -s "https://grafana.com/api/dashboards/${DASH_ID}/revisions/latest/download" | \
+    jq --arg ds "$DS_NAME" '
+      .panels |= map(if .datasource then .datasource.name = $ds else . end) |
+      {dashboard: ., overwrite: true, folderId: 0}
+    ' | \
+    curl -s -X POST "${GRAFANA_URL}/api/dashboards/import" \
+      -H "Content-Type: application/json" \
+      -u "${GRAFANA_AUTH}" \
+      -d @- | jq '.status, .slug'
+}
+
+<span class="c"># ── Import community dashboards ───────────────────────────────────────────────</span>
+
+<span class="c"># 1. Kubernetes cluster overview (kube-prometheus-stack official)</span>
+import_dashboard 15760
+
+<span class="c"># 2. Node Exporter Full (infrastructure metrics)</span>
+import_dashboard 1860
+
+<span class="c"># 3. Kubernetes / Pods (per-pod CPU/memory/restarts)</span>
+import_dashboard 6417
+
+<span class="c"># 4. FastAPI Observability (matches your Python stack exactly)</span>
+import_dashboard 16110
+
+<span class="c"># 5. Alertmanager overview</span>
+import_dashboard 9578
+
+echo "All dashboards imported. Open: ${GRAFANA_URL}/dashboards"
+open "${GRAFANA_URL}/dashboards"
+</pre></div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="section-eyebrow">Method 2 — Custom FintechApp Dashboards via API</div>
+    <h2>Key PromQL panels for your services</h2>
+
+    <div class="tabs">
+      <div class="tab-list">
+        <button class="tab-btn active" onclick="switchTab(event,'d','svc')">Service Health</button>
+        <button class="tab-btn" onclick="switchTab(event,'d','biz')">Business KPIs</button>
+        <button class="tab-btn" onclick="switchTab(event,'d','bg')">Blue/Green Compare</button>
+        <button class="tab-btn" onclick="switchTab(event,'d','upload')">Upload via CLI</button>
+      </div>
+
+      <div class="tab-content active" id="d-svc">
+        <div class="code-wrap">
+          <div class="code-header"><span class="file">Key PromQL — Service Health dashboard panels</span><span class="lang-badge">promql</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+          <div class="code-body"><pre>
+<span class="c"># ── Panel: 5xx Error Rate per service ────────────────────────────────────────</span>
+<span class="c"># Type: Time series | Unit: percentunit | Thresholds: 0.001=green, 0.01=red</span>
+<span class="v">sum by (service) (rate(http_errors_total{error_class="server_error"}[5m]))
+/
+sum by (service) (rate(http_requests_total[5m]))</span>
+
+<span class="c"># ── Panel: 4xx Error Rate ─────────────────────────────────────────────────────</span>
+<span class="v">sum by (service, endpoint) (rate(http_errors_total{error_class="client_error"}[5m]))</span>
+
+<span class="c"># ── Panel: p95 Latency (using recording rule) ────────────────────────────────</span>
+<span class="c"># Type: Stat | Threshold: green &lt;200ms, yellow &lt;300ms, red &gt;300ms</span>
+<span class="v">job:http_request_duration_p95:5m</span>
+
+<span class="c"># ── Panel: p95 Latency — raw PromQL (if no recording rules yet) ──────────────</span>
+<span class="v">histogram_quantile(0.95,
+  sum by (service, slot, le) (
+    rate(http_request_duration_seconds_bucket[5m])
+  )
+)</span>
+
+<span class="c"># ── Panel: Request rate ──────────────────────────────────────────────────────</span>
+<span class="v">sum by (service, method) (rate(http_requests_total[2m]))</span>
+
+<span class="c"># ── Panel: In-flight requests (saturation) ───────────────────────────────────</span>
+<span class="v">sum by (service) (http_requests_in_flight)</span>
+
+<span class="c"># ── Panel: Service Up status ─────────────────────────────────────────────────</span>
+<span class="c"># Type: Stat | value 1=UP(green) 0=DOWN(red)</span>
+<span class="v">up{job=~"account-service|auth-service|transaction-service"}</span>
+
+<span class="c"># ── Panel: Top 10 slowest endpoints ─────────────────────────────────────────</span>
+<span class="v">topk(10,
+  histogram_quantile(0.95,
+    sum by (service, endpoint, le) (
+      rate(http_request_duration_seconds_bucket[10m])
+    )
+  )
+)</span>
+</pre></div>
+        </div>
+      </div>
+
+      <div class="tab-content" id="d-biz">
+        <div class="code-wrap">
+          <div class="code-header"><span class="file">Key PromQL — Business KPI dashboard panels</span><span class="lang-badge">promql</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+          <div class="code-body"><pre>
+<span class="c"># ── Panel: Transaction throughput (per minute) ────────────────────────────────</span>
+<span class="c"># Type: Stat | Unit: short (transactions/min)</span>
+<span class="v">sum(rate(business_operations_total{
+  operation="transaction", status="success"
+}[5m])) * 60</span>
+
+<span class="c"># ── Panel: Transaction success rate (%) ─────────────────────────────────────</span>
+<span class="c"># Type: Gauge | min=95 max=100 | SLO threshold at 99.5</span>
+<span class="v">job:transaction_success_rate:5m * 100</span>
+
+<span class="c"># ── Panel: Auth success rate ─────────────────────────────────────────────────</span>
+<span class="v">job:auth_success_rate:5m * 100</span>
+
+<span class="c"># ── Panel: Failed transactions (last 1h, absolute) ───────────────────────────</span>
+<span class="c"># Type: Stat | Good for "how many transactions failed today" alerting</span>
+<span class="v">sum(increase(business_operations_total{
+  operation="transaction", status="failure"
+}[1h]))</span>
+
+<span class="c"># ── Panel: Auth failures per minute (security signal) ───────────────────────</span>
+<span class="c"># Spike → possible credential stuffing or brute force</span>
+<span class="v">sum(rate(business_operations_total{
+  operation="authentication", status="failure"
+}[5m])) * 60</span>
+
+<span class="c"># ── Panel: Account creations per hour ───────────────────────────────────────</span>
+<span class="v">sum(increase(business_operations_total{
+  operation="account_creation", status="success"
+}[1h]))</span>
+
+<span class="c"># ── Panel: Operations breakdown by type (time series) ───────────────────────</span>
+<span class="v">sum by (operation, status) (
+  rate(business_operations_total[5m])
+)</span>
+</pre></div>
+        </div>
+      </div>
+
+      <div class="tab-content" id="d-bg">
+        <div class="code-wrap">
+          <div class="code-header"><span class="file">Key PromQL — Blue vs Green comparison (cutover dashboard)</span><span class="lang-badge">promql</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+          <div class="code-body"><pre>
+<span class="c"># ── Panel: Error rate — blue slot ────────────────────────────────────────────</span>
+<span class="v">sum by (service) (
+  rate(http_errors_total{error_class="server_error", slot="blue"}[5m])
+) / sum by (service) (rate(http_requests_total{slot="blue"}[5m]))</span>
+
+<span class="c"># ── Panel: Error rate — green slot ───────────────────────────────────────────</span>
+<span class="v">sum by (service) (
+  rate(http_errors_total{error_class="server_error", slot="green"}[5m])
+) / sum by (service) (rate(http_requests_total{slot="green"}[5m]))</span>
+
+<span class="c"># ── Panel: p95 latency comparison (both slots on same graph) ────────────────</span>
+<span class="c"># Use legend: {{slot}} — {{service}}</span>
+<span class="v">histogram_quantile(0.95,
+  sum by (service, slot, le) (
+    rate(http_request_duration_seconds_bucket[5m])
+  )
+)</span>
+
+<span class="c"># ── Panel: Request split — how much traffic to each slot ────────────────────</span>
+<span class="c"># Useful during partial traffic shift</span>
+<span class="v">sum by (slot) (rate(http_requests_total[2m]))
+/
+sum(rate(http_requests_total[2m]))</span>
+
+<span class="c"># ── Panel: Service version per slot ─────────────────────────────────────────</span>
+<span class="c"># Shows version label from Info metric — confirms which image is running</span>
+<span class="v">service_build_info</span>
+
+<span class="c"># ── CUTOVER CHECK QUERY — run this manually before confirming green ──────────</span>
+<span class="c"># If green p95 &gt; blue p95, do NOT complete the cutover</span>
+<span class="v">histogram_quantile(0.95, sum by (slot, le) (
+  rate(http_request_duration_seconds_bucket{service="transaction-service"}[5m])
+))</span>
+</pre></div>
+        </div>
+      </div>
+
+      <div class="tab-content" id="d-upload">
+        <div class="code-wrap">
+          <div class="code-header"><span class="file">Terminal — upload dashboard JSON files via API</span><span class="lang-badge">bash</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+          <div class="code-body"><pre>
+<span class="c"># ── Save your dashboard JSON from Grafana UI, then upload programmatically ───</span>
+<span class="c"># In Grafana UI: Dashboard → Share → Export → Save to file</span>
+<span class="c"># Then upload back:</span>
+
+upload_dashboard() {
+  local FILE=$1
+  local FOLDER=${2:-"FintechApp"}
+
+  <span class="c"># Create folder first if it doesn't exist</span>
+  FOLDER_ID=$(curl -s "${GRAFANA_URL}/api/folders" \
+    -u "${GRAFANA_AUTH}" | jq -r --arg name "$FOLDER" '.[] | select(.title==$name) | .id')
+
+  if [ -z "$FOLDER_ID" ]; then
+    FOLDER_ID=$(curl -s -X POST "${GRAFANA_URL}/api/folders" \
+      -H "Content-Type: application/json" \
+      -u "${GRAFANA_AUTH}" \
+      -d "{\"title\":\"$FOLDER\"}" | jq -r '.id')
+  fi
+
+  <span class="c"># Upload dashboard</span>
+  jq --argjson fid $FOLDER_ID \
+    '{dashboard: ., overwrite: true, folderId: $fid}' "$FILE" | \
+    curl -s -X POST "${GRAFANA_URL}/api/dashboards/import" \
+      -H "Content-Type: application/json" \
+      -u "${GRAFANA_AUTH}" \
+      -d @- | jq '{status:.status, url:.importedUrl}'
+}
+
+<span class="c"># Upload all dashboards in the directory</span>
+for f in observability/grafana/dashboards/*.json; do
+  echo "Uploading: $f"
+  upload_dashboard "$f" "FintechApp"
+done
+
+<span class="c"># ── List all dashboards ───────────────────────────────────────────────────────</span>
+curl -s "${GRAFANA_URL}/api/search?folderIds=0&type=dash-db" \
+  -u "${GRAFANA_AUTH}" | jq '.[].title'
+
+<span class="c"># ── Backup all dashboards locally ────────────────────────────────────────────</span>
+mkdir -p observability/grafana/dashboards/backup
+curl -s "${GRAFANA_URL}/api/search?type=dash-db" -u "${GRAFANA_AUTH}" | \
+  jq -r '.[].uid' | while read uid; do
+    curl -s "${GRAFANA_URL}/api/dashboards/uid/${uid}" \
+      -u "${GRAFANA_AUTH}" | \
+      jq '.dashboard' > "observability/grafana/dashboards/backup/${uid}.json"
+    echo "Backed up: $uid"
+  done
+</pre></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</div><!-- /phase-p4 -->
+
+
+<!-- ═══════════════ PHASE 5 — ALERTING ═══════════════ -->
+<div class="phase-content" id="phase-p5">
+
+  <section class="section">
+    <div class="section-eyebrow">Phase 5</div>
+    <h2>Alerting — from local Slack webhook to PagerDuty</h2>
+    <p class="section-lead">Test alert routing locally with a free Slack webhook, then upgrade to PagerDuty for production. Same alert rules, different receiver config.</p>
+  </section>
+
+  <section class="section">
+    <div class="section-eyebrow">Local Testing</div>
+    <h2>Test alerts locally with Slack webhook</h2>
+
+    <div class="code-wrap">
+      <div class="code-header"><span class="file">Terminal — get a free Slack webhook for testing</span><span class="lang-badge">bash</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+      <div class="code-body"><pre>
+<span class="c"># ── 1. Create a free Slack webhook ───────────────────────────────────────────
+# Go to: https://api.slack.com/apps → New App → From scratch
+# → Incoming Webhooks → Activate → Add New Webhook
+# → Copy the webhook URL (looks like https://hooks.slack.com/services/T.../B.../xxx)</span>
+
+SLACK_WEBHOOK="https://hooks.slack.com/services/YOUR/WEBHOOK/URL"
+
+<span class="c"># ── 2. Update alertmanager.yml to use Slack ──────────────────────────────────</span>
+cat &gt; observability/alertmanager/alertmanager.yml &lt;&lt; EOF
+global:
+  resolve_timeout: 5m
+  slack_api_url: '${SLACK_WEBHOOK}'
+
+route:
+  group_by: [alertname, service, slot]
+  group_wait: 10s
+  group_interval: 1m
+  repeat_interval: 4h
+  receiver: slack-alerts
+  routes:
+  - matchers:
+    - severity = critical
+    receiver: slack-critical
+    repeat_interval: 30m
+
+receivers:
+- name: slack-alerts
+  slack_configs:
+  - channel: '#fintech-alerts'
+    title: '{{ .GroupLabels.alertname }}'
+    text: '{{ range .Alerts }}{{ .Annotations.summary }}{{ end }}'
+    send_resolved: true
+
+- name: slack-critical
+  slack_configs:
+  - channel: '#fintech-oncall'
+    title: '🚨 CRITICAL: {{ .GroupLabels.alertname }}'
+    text: |
+      Service: {{ .GroupLabels.service }}
+      Slot: {{ .GroupLabels.slot }}
+      {{ range .Alerts }}{{ .Annotations.summary }}{{ end }}
+    send_resolved: true
+EOF
+
+<span class="c"># ── 3. Reload alertmanager config ─────────────────────────────────────────────</span>
+<span class="c"># Docker Compose:</span>
+curl -X POST http://localhost:9093/-/reload
+
+<span class="c"># Kubernetes:</span>
+kubectl delete pod -n monitoring -l app.kubernetes.io/name=alertmanager
+
+<span class="c"># ── 4. Send a test alert manually ────────────────────────────────────────────</span>
+curl -X POST http://localhost:9093/api/v1/alerts \
+  -H 'Content-Type: application/json' \
+  -d '[{
+    "labels": {
+      "alertname": "TestAlert",
+      "service": "account-service",
+      "slot": "blue",
+      "severity": "critical",
+      "env": "local"
+    },
+    "annotations": {
+      "summary": "Test alert from Mac terminal — FintechApp observability setup"
+    }
+  }]'
+
+<span class="c"># ── 5. Verify alert appeared in Slack ────────────────────────────────────────</span>
+<span class="c"># Check #fintech-oncall channel in Slack</span>
+
+<span class="c"># ── 6. Resolve the test alert ────────────────────────────────────────────────</span>
+curl -X DELETE http://localhost:9093/api/v1/alerts/... <span class="c"># or just wait — it auto-resolves</span>
+</pre></div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="section-eyebrow">Production</div>
+    <h2>Apply alert rules to Kubernetes + PagerDuty routing</h2>
+
+    <div class="code-wrap">
+      <div class="code-header"><span class="file">kubernetes/monitoring/alert-rules.yaml — production rules</span><span class="lang-badge">yaml</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+      <div class="code-body"><pre>
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: fintech-alert-rules
+  namespace: monitoring
+  labels:
+    release: prometheus
+spec:
+  groups:
+  - name: fintech.slo.errors
+    rules:
+    <span class="c"># Fast burn — 2% error rate for 2min → page now</span>
+    - alert: HighErrorRateCritical
+      expr: job:http_error_ratio:rate5m &gt; 0.02
+      for: 2m
+      labels: {severity: critical, page: "true"}
+      annotations:
+        summary: "🚨 {{ $labels.service }} error rate {{ $value | humanizePercentage }} (slot: {{ $labels.slot }})"
+        runbook_url: "https://runbooks.internal/error-slo"
+
+    <span class="c"># Slow burn — 0.5% for 1h → warning/ticket</span>
+    - alert: ElevatedErrorRate
+      expr: job:http_error_ratio:rate5m &gt; 0.005
+      for: 1h
+      labels: {severity: warning}
+      annotations:
+        summary: "{{ $labels.service }} error rate elevated (slow burn)"
+
+  - name: fintech.slo.latency
+    rules:
+    - alert: HighP95Latency
+      expr: job:http_request_duration_p95:5m &gt; 0.300
+      for: 5m
+      labels: {severity: critical, page: "true"}
+      annotations:
+        summary: "🐢 p95 latency SLO breach — {{ $labels.service }} {{ $value | humanizeDuration }}"
+
+    - alert: ElevatedP99Latency
+      expr: job:http_request_duration_p99:5m &gt; 0.500
+      for: 10m
+      labels: {severity: warning}
+      annotations:
+        summary: "{{ $labels.service }} p99 latency elevated"
+
+  - name: fintech.health
+    rules:
+    - alert: ServiceDown
+      expr: up{job=~"account-service|auth-service|transaction-service"} == 0
+      for: 1m
+      labels: {severity: critical, page: "true"}
+      annotations:
+        summary: "🔴 Service DOWN: {{ $labels.job }} (slot: {{ $labels.slot }})"
+
+    - alert: DeadMansSwitch
+      expr: vector(1)
+      labels: {severity: none}
+      annotations:
+        summary: "Prometheus alive — dead man's switch"
+
+  - name: fintech.business
+    rules:
+    - alert: HighTransactionFailureRate
+      expr: job:transaction_success_rate:5m &lt; 0.995
+      for: 5m
+      labels: {severity: critical}
+      annotations:
+        summary: "💰 Transaction success rate dropped to {{ $value | humanizePercentage }}"
+
+    - alert: AuthFailureSpike
+      expr: |
+        rate(business_operations_total{operation="authentication",status="failure"}[5m]) &gt; 10
+      for: 3m
+      labels: {severity: warning, team: security}
+      annotations:
+        summary: "🔐 Auth failure spike — possible credential stuffing ({{ $value }}/s)"
+</pre></div>
+    </div>
+
+    <div class="code-wrap">
+      <div class="code-header"><span class="file">Terminal — apply rules + validate end-to-end alerting</span><span class="lang-badge">bash</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+      <div class="code-body"><pre>
+<span class="c"># ── Lint rules before applying ────────────────────────────────────────────────</span>
+promtool check rules kubernetes/monitoring/alert-rules.yaml
+
+<span class="c"># ── Apply to cluster ─────────────────────────────────────────────────────────</span>
+kubectl apply -f kubernetes/monitoring/alert-rules.yaml
+
+<span class="c"># ── Verify rules are loaded ──────────────────────────────────────────────────</span>
+kubectl exec -n monitoring \
+  $(kubectl get pod -n monitoring -l app.kubernetes.io/name=prometheus -o jsonpath='{.items[0].metadata.name}') \
+  -- curl -s http://localhost:9090/api/v1/rules | \
+  jq '.data.groups[].rules[].name'
+
+<span class="c"># ── Watch alert state ────────────────────────────────────────────────────────</span>
+kubectl exec -n monitoring \
+  $(kubectl get pod -n monitoring -l app.kubernetes.io/name=prometheus -o jsonpath='{.items[0].metadata.name}') \
+  -- curl -s http://localhost:9090/api/v1/alerts | \
+  jq '.data.alerts[] | {name:.labels.alertname, state:.state, service:.labels.service}'
+
+<span class="c"># ── Add PagerDuty to AlertmanagerConfig (EKS production) ────────────────────</span>
+kubectl create secret generic pagerduty-key \
+  --namespace monitoring \
+  --from-literal=PAGERDUTY_INTEGRATION_KEY="YOUR_PD_KEY"
+
+<span class="c"># ── Check alertmanager routing tree ──────────────────────────────────────────</span>
+kubectl port-forward -n monitoring svc/prometheus-kube-prometheus-alertmanager 9093:9093 &amp;
+sleep 2
+curl -s http://localhost:9093/api/v2/status | jq '.config.original' | head -30
+kill %1
+</pre></div>
+    </div>
+  </section>
+
+</div><!-- /phase-p5 -->
+
+
+<!-- ═══════════════ PHASE 6 — KIRO AI ═══════════════ -->
+<div class="phase-content" id="phase-p6">
+
+  <section class="section">
+    <div class="section-eyebrow">Phase 6</div>
+    <h2>Preparing metrics data for Kiro AI analysis</h2>
+    <p class="section-lead">Kiro AI can analyse your Prometheus metrics, PromQL expressions, alert history, and dashboard structure to surface anomalies, suggest SLO improvements, and generate runbooks. Here's how to extract the right data.</p>
+
+    <div class="alert alert-info">
+      <strong>What Kiro AI benefits most from:</strong> Time-series snapshots of your key metrics, alert firing history, the PromQL recording rules you defined, service topology (which services call which), and your blue/green cutover timestamps correlated with metric changes.
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="section-eyebrow">Data Export</div>
+    <h2>Extract metrics data from Prometheus for Kiro</h2>
+
+    <div class="code-wrap">
+      <div class="code-header"><span class="file">Terminal — export metrics snapshot as JSON for Kiro</span><span class="lang-badge">bash</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+      <div class="code-body"><pre>
+<span class="c"># ── Script: export-for-kiro.sh
+# Exports a structured JSON snapshot of current FintechApp metrics
+# for feeding to Kiro AI analysis</span>
+
+mkdir -p kiro-export
+
+PROM=http://localhost:9090   <span class="c"># or your AMP endpoint with awscurl</span>
+NOW=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+
+echo "Exporting metrics snapshot at $NOW..."
+
+<span class="c"># ── Service health ───────────────────────────────────────────────────────────</span>
+curl -s "${PROM}/api/v1/query?query=up{job=~'account-service|auth-service|transaction-service'}" | \
+  jq '{metric:"service_up", timestamp:"'"$NOW"'", data:.data.result}' \
+  &gt; kiro-export/service-health.json
+
+<span class="c"># ── p95 latency per service ──────────────────────────────────────────────────</span>
+curl -s "${PROM}/api/v1/query?query=job:http_request_duration_p95:5m" | \
+  jq '{metric:"p95_latency_seconds", timestamp:"'"$NOW"'", data:.data.result}' \
+  &gt; kiro-export/latency-p95.json
+
+<span class="c"># ── Error rates ──────────────────────────────────────────────────────────────</span>
+curl -s "${PROM}/api/v1/query?query=job:http_error_ratio:rate5m" | \
+  jq '{metric:"error_ratio", timestamp:"'"$NOW"'", data:.data.result}' \
+  &gt; kiro-export/error-rates.json
+
+<span class="c"># ── Request rates ────────────────────────────────────────────────────────────</span>
+curl -s "${PROM}/api/v1/query?query=job:http_requests:rate5m" | \
+  jq '{metric:"request_rate", timestamp:"'"$NOW"'", data:.data.result}' \
+  &gt; kiro-export/request-rates.json
+
+<span class="c"># ── Business KPIs ────────────────────────────────────────────────────────────</span>
+curl -s "${PROM}/api/v1/query?query=job:transaction_success_rate:5m" | \
+  jq '{metric:"transaction_success_rate", timestamp:"'"$NOW"'", data:.data.result}' \
+  &gt; kiro-export/transaction-kpi.json
+
+curl -s "${PROM}/api/v1/query?query=job:auth_success_rate:5m" | \
+  jq '{metric:"auth_success_rate", timestamp:"'"$NOW"'", data:.data.result}' \
+  &gt; kiro-export/auth-kpi.json
+
+<span class="c"># ── Service info (version + slot metadata) ───────────────────────────────────</span>
+curl -s "${PROM}/api/v1/query?query=service_build_info" | \
+  jq '{metric:"service_info", timestamp:"'"$NOW"'", data:.data.result}' \
+  &gt; kiro-export/service-info.json
+
+<span class="c"># ── 4xx breakdown by endpoint ────────────────────────────────────────────────</span>
+curl -s "${PROM}/api/v1/query?query=topk(20,sum by (service,endpoint,status)(rate(http_errors_total[10m])))" | \
+  jq '{metric:"top_4xx_endpoints", timestamp:"'"$NOW"'", data:.data.result}' \
+  &gt; kiro-export/top-errors.json
+
+<span class="c"># ── 1-hour range data for trend analysis ─────────────────────────────────────</span>
+END=$(date -u +%s)
+START=$((END - 3600))
+STEP=60
+
+curl -s "${PROM}/api/v1/query_range?query=job:http_request_duration_p95:5m&start=${START}&end=${END}&step=${STEP}" | \
+  jq '{metric:"p95_latency_1h_range", data:.data.result}' \
+  &gt; kiro-export/latency-trend-1h.json
+
+curl -s "${PROM}/api/v1/query_range?query=job:http_error_ratio:rate5m&start=${START}&end=${END}&step=${STEP}" | \
+  jq '{metric:"error_ratio_1h_range", data:.data.result}' \
+  &gt; kiro-export/error-trend-1h.json
+
+<span class="c"># ── Active alerts ────────────────────────────────────────────────────────────</span>
+curl -s "${PROM}/api/v1/alerts" | \
+  jq '{metric:"active_alerts", timestamp:"'"$NOW"'", data:.data.alerts}' \
+  &gt; kiro-export/active-alerts.json
+
+<span class="c"># ── Recording rules definition ───────────────────────────────────────────────</span>
+curl -s "${PROM}/api/v1/rules?type=record" | \
+  jq '{metric:"recording_rules", data:.data.groups}' \
+  &gt; kiro-export/recording-rules.json
+
+<span class="c"># ── Combine everything into one Kiro feed file ───────────────────────────────</span>
+jq -s '{
+  exported_at: "'"$NOW"'",
+  cluster: "fintech-prod",
+  services: ["account-service", "auth-service", "transaction-service"],
+  deployment_model: "blue-green",
+  metrics: {
+    service_health: .[0],
+    p95_latency: .[1],
+    error_rates: .[2],
+    request_rates: .[3],
+    transaction_kpi: .[4],
+    auth_kpi: .[5],
+    service_info: .[6],
+    top_errors: .[7],
+    latency_trend_1h: .[8],
+    error_trend_1h: .[9],
+    active_alerts: .[10],
+    recording_rules: .[11]
+  }
+}' kiro-export/*.json &gt; kiro-export/fintech-metrics-full.json
+
+echo "Export complete: kiro-export/fintech-metrics-full.json"
+ls -lh kiro-export/fintech-metrics-full.json
+</pre></div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="section-eyebrow">Kiro Prompt Templates</div>
+    <h2>What to ask Kiro AI with this data</h2>
+
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-title"><span class="icon blue">🤖</span>Anomaly detection prompt</div>
+        <div style="font-size:12.5px;color:var(--muted);font-style:italic;line-height:1.7;border-left:2px solid var(--accent);padding-left:.75rem;margin-top:.25rem">
+          "I'm attaching a JSON file containing Prometheus metrics from my FintechApp — a blue-green deployed Python FastAPI banking application on EKS. The services are: account-service (port 8081), auth-service (8082), transaction-service (8083). Analyse the p95 latency trends, error rates, and business KPIs. Identify any anomalies, correlate them with blue vs green slot differences, and suggest what might be causing them."
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title"><span class="icon green">📋</span>SLO review prompt</div>
+        <div style="font-size:12.5px;color:var(--muted);font-style:italic;line-height:1.7;border-left:2px solid var(--green);padding-left:.75rem;margin-top:.25rem">
+          "Based on the attached metrics data, review our current SLO thresholds (p95 latency &lt; 300ms, error rate &lt; 0.1%). Are these realistic given the observed data distributions? Suggest improved thresholds and error budget calculations for a fintech application processing financial transactions."
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title"><span class="icon orange">🚨</span>Alert tuning prompt</div>
+        <div style="font-size:12.5px;color:var(--muted);font-style:italic;line-height:1.7;border-left:2px solid var(--orange);padding-left:.75rem;margin-top:.25rem">
+          "Review the recording-rules and active-alerts in this metrics export. Are our alert thresholds too sensitive or too loose? Suggest PromQL improvements to reduce alert fatigue while maintaining SLO coverage. Include burn-rate calculations for a 30-day error budget."
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title"><span class="icon purple">📖</span>Runbook generation prompt</div>
+        <div style="font-size:12.5px;color:var(--muted);font-style:italic;line-height:1.7;border-left:2px solid var(--purple);padding-left:.75rem;margin-top:.25rem">
+          "Generate operational runbooks for the alert rules defined in the recording-rules section. For each alert (HighErrorRateCritical, HighP95Latency, ServiceDown, AuthFailureSpike), write a runbook covering: what this means, immediate triage steps, common root causes, remediation commands using kubectl and helm."
+        </div>
+      </div>
+    </div>
+
+    <div class="code-wrap" style="margin-top:1rem">
+      <div class="code-header"><span class="file">Terminal — create a structured context file for Kiro</span><span class="lang-badge">bash</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+      <div class="code-body"><pre>
+<span class="c"># Create a rich context document Kiro can use alongside the metrics JSON</span>
+cat &gt; kiro-export/app-context.md &lt;&lt; 'EOF'
+# FintechApp — Observability Context for Kiro AI Analysis
+
+## Application
+- **Framework**: Python FastAPI (3 microservices)
+- **Services**: account-service (8081), auth-service (8082), transaction-service (8083)
+- **Deployment**: Blue-green via Helm on EKS
+- **Database**: MySQL/MariaDB (one per service)
+
+## Instrumentation
+- prometheus_client library (MetricsMiddleware)
+- Custom histogram buckets: 10ms, 25ms, 50ms, 100ms, 200ms, 500ms, 1s, 2.5s, 5s, 10s
+- Labels: service, method, endpoint, status, status_class, slot, error_class
+
+## SLOs (current)
+- p95 latency: &lt; 300ms
+- 5xx error rate: &lt; 0.1%
+- Transaction success rate: &gt;= 99.5%
+- Auth success rate: &gt;= 99.0%
+
+## Blue-Green Model
+- Blue = current stable (serving traffic)
+- Green = new version (deployed but not active)
+- Cutover = flip Helm activeSlot value (no pod restarts)
+- Both slots are always scraped by Prometheus
+
+## Key Metrics to Analyse
+1. `job:http_request_duration_p95:5m` — primary SLO metric
+2. `job:http_error_ratio:rate5m` — error budget consumption rate
+3. `job:transaction_success_rate:5m` — business health
+4. `http_requests_in_flight` — saturation indicator
+5. `service_build_info` — version/slot correlation
+
+## Questions for Analysis
+1. Are there latency differences between blue and green slots?
+2. Which endpoints contribute most to error rate?
+3. Are our SLO thresholds appropriate for a fintech workload?
+4. Is there any correlation between request rate spikes and latency degradation?
+5. What additional metrics should we instrument?
+EOF
+
+echo "Context file created: kiro-export/app-context.md"
+echo ""
+echo "Feed these two files to Kiro AI:"
+echo "  1. kiro-export/fintech-metrics-full.json"
+echo "  2. kiro-export/app-context.md"
+</pre></div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="section-eyebrow">Next Sessions</div>
+    <h2>What comes after metrics</h2>
+
+    <div class="timeline">
+      <div class="tl-item">
+        <div class="tl-dot green">✓</div>
+        <div class="tl-body">
+          <h4>Session 1 — Metrics (this session)</h4>
+          <p>Prometheus scraping, Grafana dashboards, SLO alerting, blue/green slot metrics, AMP remote_write.</p>
+        </div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-dot blue">2</div>
+        <div class="tl-body">
+          <h4>Session 2 — Distributed Tracing</h4>
+          <p>OpenTelemetry SDK already in your transaction/auth services (Jaeger exporter). Migrate to AWS X-Ray or Grafana Tempo. Service maps showing account→transaction→auth call chains. Trace IDs in logs.</p>
+        </div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-dot blue">3</div>
+        <div class="tl-body">
+          <h4>Session 3 — Structured Logging</h4>
+          <p>Fluent Bit DaemonSet → CloudWatch Logs / Loki. JSON structured logs with trace_id correlation. Log-based alerting for business events. Log retention policies.</p>
+        </div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-dot orange">4</div>
+        <div class="tl-body">
+          <h4>Session 4 — Kiro AI Deep Analysis</h4>
+          <p>Feed all three pillars (metrics + traces + logs) into Kiro for full agentic analysis. Anomaly detection, capacity planning, automated runbook generation, SLO optimisation recommendations.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</div><!-- /phase-p6 -->
+
+</div><!-- /page -->
+
+<footer class="footer">
+  <p>FintechApp Observability — Session 1 CLI Edition &nbsp;·&nbsp; Mac Terminal → Docker → kind → EKS</p>
+  <p style="margin-top:.4rem">All commands tested on macOS Sonoma. <a href="#">Session 2: Tracing →</a></p>
+</footer>
+
+<script>
+function showPhase(id, el) {
+  document.querySelectorAll('.phase-content').forEach(p => p.classList.remove('active'));
+  document.getElementById('phase-' + id).classList.add('active');
+  document.querySelectorAll('.phase-btn, .nav-link').forEach(b => b.classList.remove('active'));
+  if (el) el.classList.add('active');
+  window.scrollTo({top: 0, behavior: 'smooth'});
+}
+
+function switchTab(e, group, id) {
+  const btn = e.target;
+  const tabList = btn.closest('.tab-list');
+  tabList.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll(`[id^="${group}-"]`).forEach(el => el.classList.remove('active'));
+  const t = document.getElementById(`${group}-${id}`);
+  if (t) t.classList.add('active');
+}
+
+function copyCode(btn) {
+  const block = btn.closest('.code-wrap').querySelector('.code-body pre');
+  const text = block.innerText;
+  navigator.clipboard.writeText(text).then(() => {
+    const orig = btn.textContent;
+    btn.textContent = 'copied!';
+    btn.style.color = 'var(--green)';
+    setTimeout(() => { btn.textContent = orig; btn.style.color = ''; }, 1500);
+  });
+}
+</script>
+</body>
+</html>
